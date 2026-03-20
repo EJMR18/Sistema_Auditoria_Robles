@@ -14,6 +14,7 @@ Plataforma web para digitalizar la gestión, ejecución y seguimiento de auditor
 
 ## Documentación del Proyecto
 * [Ver Entrega 1 - Especificación de Requerimientos (PDF)](./docs/entrega1/EPRO_Entrega1_Grupo20_SistemaInternodeAuditoria.pdf)
+* [Ver Entrega 2 - Especificación de Requerimientos (PDF)](./docs/entrega2/EPRO_Entrega2_Grupo20_SistemaInternodeAuditoria.pdf)
 
 ---
 *Facultad de Informática y Ciencias Aplicadas - Estándares de Programación*
