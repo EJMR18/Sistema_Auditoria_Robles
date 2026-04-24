@@ -2,17 +2,21 @@ import pool from '../config/db.js';
 
 class Usuario {
 
-    //metodo para obtener todos los usuarios de la BD
-    static async obtenerTodosLosUsuarios() {
-        try {
-            const resultado = await pool.query('SELECT * FROM sar_usuarios');
-            //resultado contiene la matriz de datos de la tabla
-            return resultado.rows;
-        } catch (error) {
-            console.error("Error al consultar la tabla usuarios:", error);
-            throw error;
-        }
-    }
+static async insertar(datos){
+
+const { id_rol, id_empleado, username, password_hash } = datos;
+        
+        const query = `
+            INSERT INTO SAR_Usuarios (id_rol, id_empleado, username, password_hash)
+            VALUES ($1, $2, $3, $4) 
+            RETURNING id_usuario, id_rol, id_empleado, username;
+        `;
+        
+        const values = [id_rol, id_empleado, username, password_hash];
+        
+        const resultado = await pool.query(query, values);
+        return resultado.rows[0];
+}
 }
 
 export default Usuario;
