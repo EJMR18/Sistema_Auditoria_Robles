@@ -4,7 +4,7 @@ class Usuario {
 
 static async insertar(datos){
 
-const { id_rol, id_empleado, username, password_hash } = datos;
+    const { id_rol, id_empleado, username, password_hash } = datos;
         
         const query = `
             INSERT INTO SAR_Usuarios (id_rol, id_empleado, username, password_hash)
@@ -16,7 +16,18 @@ const { id_rol, id_empleado, username, password_hash } = datos;
         
         const resultado = await pool.query(query, values);
         return resultado.rows[0];
-}
+    }
+
+    static async buscarPorUsername(username) {
+        const query = `
+            SELECT id_usuario, id_rol, id_empleado, username, password_hash 
+            FROM SAR_Usuarios 
+            WHERE username = $1
+        `;
+        const { rows } = await pool.query(query, [username]);
+        
+        return rows[0]; 
+    }
 }
 
 export default Usuario;

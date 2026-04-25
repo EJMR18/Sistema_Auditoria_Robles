@@ -1,8 +1,10 @@
 import express from 'express';
-import { registrarUsuario } from '../controllers/UsuarioController.js';
+import { registrarUsuario, loginUsuario } from '../controllers/UsuarioController.js';
 //creamos las rutas para los usuarios
 const router = express.Router();
-//definimos la ruta raiz de usuarios y la conectamos al controlador
+
 router.post('/registro', registrarUsuario);
+router.post('/login', loginUsuario)
+
 
 export default router;
