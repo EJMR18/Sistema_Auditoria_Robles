@@ -9,7 +9,7 @@ static async insertar(datos){
         const query = `
             INSERT INTO SAR_Usuarios (id_rol, id_empleado, username, password_hash)
             VALUES ($1, $2, $3, $4) 
-            RETURNING id_usuario, id_rol, id_empleado, username;
+            RETURNING id_usuario, uuid_usuario, id_rol, id_empleado, username;
         `;
         
         const values = [id_rol, id_empleado, username, password_hash];
@@ -20,7 +20,7 @@ static async insertar(datos){
 
     static async buscarPorUsername(username) {
         const query = `
-            SELECT id_usuario, id_rol, id_empleado, username, password_hash 
+            SELECT id_usuario,uuid_usuario, id_rol, id_empleado, username, password_hash, estado_activo, inhabilitado_en
             FROM SAR_Usuarios 
             WHERE username = $1
         `;
