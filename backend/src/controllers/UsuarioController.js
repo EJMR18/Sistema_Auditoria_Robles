@@ -65,7 +65,7 @@ export const loginUsuario = async (req, res) => {
             id_rol: usuario.id_rol
         };
 
-        const llaveSecreta = "sello_SAR2026";
+        const llaveSecreta = process.env.JWT_SECRET;
         const token = jwt.sign(payload, llaveSecreta, { expiresIn: '1h' });
 
         res.status(200).json({

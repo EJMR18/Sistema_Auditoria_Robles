@@ -1,7 +1,9 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import pool from './config/db.js';
 import usuarioRoutes from './routes/UsuarioRoutes.js';
+import dashboardRoutes from './routes/DashboardRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,12 +11,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors()); 
 app.use(express.json()); 
 
+//=========Rutas===========
 app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/', (req, res) => {
     res.send('¡Servidor de Robles S.A. en línea y funcionando!');
 });
-
+//===================Encendido del Servidor========================
 app.listen(PORT, () => {
     console.log(`Servidor del SAR corriendo en http://localhost:${PORT} 🚀`);
 });
