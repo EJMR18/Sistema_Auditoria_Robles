@@ -1,4 +1,4 @@
-import axios from "../api/axios";
+import api from "../api/axios.js";
 
 export const loginUsuario = async (username, password) => {
     try{
@@ -13,6 +13,8 @@ export const loginUsuario = async (username, password) => {
         }
         return respuesta.data;
     }catch(error){
+        console.error("🕵️‍♂️ EL ERROR REAL DE AXIOS ES:", error);
+
         if(error.response && error.response.data){
             throw error.response.data;
         }else{
