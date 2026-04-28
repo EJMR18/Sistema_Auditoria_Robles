@@ -1,11 +1,11 @@
 import Usuario from '../models/Usuario.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import AppError from '../utils/AppError.js';
 
-class UsuarioController {
-}
 
-export const registrarUsuario = async (req, res) => {
+
+export const registrarUsuario = async (req, res, next) => {
     const { id_rol, id_empleado, username, password} = req.body;
 
     try{
@@ -23,40 +23,36 @@ export const registrarUsuario = async (req, res) => {
             mensaje: "Usuario creado con Exito",
             data: nuevoUsuario
         });
-
     }catch(error){
-        console.error("Error al registrar al Usuario", error);
-
         if(error.code === '23505'){
-            return res.status(400).json({exito:false, mensaje:"El nombre de usuario ya esta en uso."});
+            return next(new AppError("El username ya existe, por favor elige otro.", 400));
         }
-
-        res.status(500).json({exito:false, mensaje:"Error interno del Servidor."});
+        next(error);
     }
 };
 
-export const loginUsuario = async (req, res) => {
+export const loginUsuario = async (req, res, next) => {
     const { username, password } = req.body;
 
     try {
         const usuario = await Usuario.buscarPorUsername(username);
         //si el usuario existe
         if (!usuario) {
-            return res.status(401).json({ exito: false, mensaje: "Credenciales incorrectas" });
+            throw new AppError('Credenciales incorrectas', 401);
         }
         //si el usuario esta inhabilitado/soft delete
         if (usuario.inhabilitado_en !== null) {
-            return res.status(401).json({ exito: false, mensaje: "Credenciales incorrectas" });
+            throw new AppError('Credenciales incorrectas', 401);
         }
         //si el usuario esta suspendido
         if(usuario.estado_activo === false){
-            return res.status(401).json({ exito: false, mensaje: "Acceso denegado: Cuenta suspendida" });
+            throw new AppError("Acceso denegado: Cuenta suspendida", 403);
         }
   
         const passwordValida = await bcrypt.compare(password, usuario.password_hash);
         //verificar la passwrord
         if (!passwordValida) {
-            return res.status(401).json({ exito: false, mensaje: "Credenciales incorrectas" });
+            throw new AppError("Credenciales incorrectas", 401);
         }
 
         //payload para el token osea el cuerpo del token
@@ -80,9 +76,8 @@ export const loginUsuario = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error en login:", error);
-        res.status(500).json({ exito: false, mensaje: "Error interno del servidor" });
+        next(error);
     }
 };
 
-export default UsuarioController;
+export default { registrarUsuario, loginUsuario};
