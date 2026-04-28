@@ -4,6 +4,7 @@ import cors from 'cors';
 import pool from './config/db.js';
 import usuarioRoutes from './routes/UsuarioRoutes.js';
 import dashboardRoutes from './routes/DashboardRoutes.js';
+import errorHandler from './middlewares/errorHandler.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +15,7 @@ app.use(express.json());
 //=========Rutas===========
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use(errorHandler); // Middleware de manejo de errores
 
 app.get('/', (req, res) => {
     res.send('¡Servidor de Robles S.A. en línea y funcionando!');
