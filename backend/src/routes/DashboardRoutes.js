@@ -3,7 +3,9 @@ import { verificarToken } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-router.get('/principal', verificarToken, (req, res) => {
+router.use(verificarToken);
+
+router.get('/principal', (req, res) => {
     res.status(200).json({
         exito: true,
         mensaje: "Acceso permitido al dashboard principal",
