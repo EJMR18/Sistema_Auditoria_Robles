@@ -1,4 +1,4 @@
-import UsuarioServices from "../services/UsuarioServices.js";
+import UsuarioServices from "../services/UsuarioService.js";
 
 export const registrarUsuario = async (req, res, next) => {
     try{
