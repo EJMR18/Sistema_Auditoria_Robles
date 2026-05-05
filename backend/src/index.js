@@ -15,11 +15,12 @@ app.use(express.json());
 //=========Rutas===========
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use(errorHandler); // Middleware de manejo de errores
 
 app.get('/', (req, res) => {
     res.send('¡Servidor de Robles S.A. en línea y funcionando!');
 });
+
+app.use(errorHandler); // Middleware de manejo de errores
 //===================Encendido del Servidor========================
 app.listen(PORT, () => {
     console.log(`Servidor del SAR corriendo en http://localhost:${PORT} 🚀`);
