@@ -53,4 +53,15 @@ const loginUsuario = async (username, password) => {
     };
 };
 
-export default { registrarUsuario, loginUsuario };
+const obtenerTodosUsuarios = async () => {
+    try {
+        const usuarios = await Usuario.obtenerTodos(); 
+        return usuarios;
+    } catch (error) {
+        throw new AppError("No se pudo obtener la lista de usuarios de los Robles", 500);
+    }
+};
+
+
+
+export default { registrarUsuario, loginUsuario, obtenerTodosUsuarios };

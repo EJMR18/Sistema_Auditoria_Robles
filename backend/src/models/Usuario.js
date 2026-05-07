@@ -28,6 +28,27 @@ static async insertar(datos){
         
         return rows[0]; 
     }
+    static async obtenerTodos() {
+        // 1. Definimos la consulta SQL
+        // Seleccionamos solo lo necesario. Nunca mandamos el password_hash al frontend.
+        const query = `
+            SELECT id_usuario, uuid_usuario, id_rol, id_empleado, username, estado_activo, creado_en 
+            FROM SAR_Usuarios 
+            ORDER BY creado_en DESC;
+        `;
+        
+        try {
+            // 2. Ejecutamos la consulta usando el pool 
+            const { rows } = await pool.query(query);
+            
+            // 3. Retornamos el arreglo de resultados
+            return rows;
+        } catch (error) {
+            // Si hay un error de SQL 
+            console.error("Error en el modelo Usuario (obtenerTodos):", error);
+            throw error;
+        }
+    }
 }
 
 export default Usuario;

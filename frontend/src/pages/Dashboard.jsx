@@ -2,20 +2,20 @@ import { useState, useEffect } from "react";
 import api from "../api/axios"; 
 
 const Dashboard = () => {
-  const [usuarios, setUsuarios] = useState([]);
+  // Dejamos el estado vacío para que refleje la base de datos actual
+  const [auditorias, setAuditorias] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
     const obtenerDatos = async () => {
       try {
-        // el token se envía de forma invisible
-        const res = await api.get('/usuarios');
-
+        //  endpoint real de Node.js
+        const res = await api.get('/auditorias'); 
         if (res.data && res.data.exito) {
-          setUsuarios(res.data.data);
+          setAuditorias(res.data.data);
         }
       } catch (err) {
-        console.error("Error al conectar con el servidor de Robles:", err);
+        console.error("Error al conectar con SAR Robles:", err);
       } finally {
         setCargando(false);
       }
@@ -23,46 +23,193 @@ const Dashboard = () => {
     obtenerDatos();
   }, []);
 
+  // Los contadores marcarán 0 automáticamente si el arreglo está vacío
+  const activas = auditorias.filter(a => a.estado === 'EN_PROCESO').length;
+  const completas = auditorias.filter(a => a.estado === 'FINALIZADA').length;
+  const abortadas = auditorias.filter(a => a.estado === 'ABORTADA').length;
+
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Sistema de Auditoría Robles (SAR) </h1>
-      <p>Panel de Control - Gestión de Cuentas</p>
-      <hr />
-      
-      {cargando ? (
-        <p>Consultando base de datos...</p>
-      ) : usuarios.length === 0 ? (
-        <p>No se encontraron registros en la tabla SAR_Usuarios.</p>
-      ) : (
+    <div style={styles.container}>
+      <header style={styles.header}>
+        <div>
+          <h1 style={styles.titulo}>Panel de Control Operativo</h1>
+          <p style={styles.subtitulo}>Resumen de inspecciones en plantas de Robles</p>
+        </div>
+      </header>
+
+      {/* SECCIÓN DE TARJETAS */}
+      <div style={styles.gridCards}>
+        <div style={{...styles.card, borderTop: '5px solid #3498db'}}>
+          <div style={{fontSize: '2rem'}}>▶️</div>
+          <h3 style={styles.cardValue}>{activas}</h3>
+          <p style={styles.cardLabel}>Auditorías Activas</p>
+        </div>
+
+        <div style={{...styles.card, borderTop: '5px solid #2ecc71'}}>
+          <div style={{fontSize: '2rem'}}>✅</div>
+          <h3 style={styles.cardValue}>{completas}</h3>
+          <p style={styles.cardLabel}>Auditorías Completas</p>
+        </div>
+
+        <div style={styles.columnaAccion}>
+          <button style={styles.btnNuevo}>+ Nueva Auditoría</button>
+          <div style={{...styles.card, borderTop: '5px solid #e74c3c', width: '100%'}}>
+            <div style={{fontSize: '2rem'}}>🚫</div>
+            <h3 style={styles.cardValue}>{abortadas}</h3>
+            <p style={styles.cardLabel}>Auditorías Abortadas</p>
+          </div>
+        </div>
+      </div>
+
+      <div style={styles.tablaWrapper}>
+        <h3 style={{color: '#0a1f33', marginBottom: '15px'}}>Auditorías Recientes</h3>
         <div style={{ overflowX: 'auto' }}>
-          <table border="1" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+          <table style={styles.tabla}>
             <thead>
-              <tr style={{ backgroundColor: '#2c3e50', color: 'white' }}>
-                <th style={{ padding: '12px' }}>ID</th>
-                <th style={{ padding: '12px' }}>Username</th>
-                <th style={{ padding: '12px' }}>ID Rol</th>
-                <th style={{ padding: '12px' }}>ID Empleado</th>
-                <th style={{ padding: '12px' }}>Estado</th>
-                <th style={{ padding: '12px' }}>Creado En</th>
+              <tr style={styles.filaHeader}>
+                <th>CÓDIGO</th>
+                <th>PLANTA</th>
+                <th>FECHA</th>
+                <th>ESTADO</th>
+                <th>ACCIÓN</th>
               </tr>
             </thead>
             <tbody>
-              {usuarios.map((u) => (
-                <tr key={u.id_usuario} style={{ textAlign: 'center' }}>
-                  <td style={{ padding: '10px' }}>{u.id_usuario}</td>
-                  <td style={{ padding: '10px' }}><strong>{u.username}</strong></td>
-                  <td style={{ padding: '10px' }}>{u.id_rol}</td>
-                  <td style={{ padding: '10px' }}>{u.id_empleado || 'Sin asignar'}</td>
-                  <td style={{ padding: '10px' }}>{u.estado_activo ? 'Activo' : 'Inactivo'}</td>
-                  <td style={{ padding: '10px' }}>{new Date(u.creado_en).toLocaleDateString()}</td>
+              {auditorias.length > 0 ? (
+                auditorias.map((a) => (
+                  <tr key={a.id_auditoria} style={styles.filaBody}>
+                    <td style={styles.celda}><strong>{a.codigo_auditoria}</strong></td>
+                    <td style={styles.celda}>{a.nombre_planta || 'Sin especificar'}</td>
+                    <td style={styles.celda}>{new Date(a.creado_en).toLocaleDateString()}</td>
+                    <td style={styles.celda}>
+                      <span style={a.estado === 'FINALIZADA' ? styles.tagFin : styles.tagProc}>
+                        {a.estado}
+                      </span>
+                    </td>
+                    <td style={styles.celda}>
+                      <button style={styles.btnVer}>VER</button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" style={{textAlign: 'center', padding: '30px', color: '#7f8c8d'}}>
+                    {cargando ? "Cargando datos..." : "No hay auditorías registradas en la base de datos."}
+                  </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
-      )}
+      </div>
     </div>
   );
+};
+
+const styles = {
+  container: { 
+    padding: '30px',
+     backgroundColor: '#f4f7f6',
+      minHeight: '100vh' 
+    },
+  header: { 
+    marginBottom: '20px' 
+  },
+  titulo: { 
+    fontSize: '1.8rem',
+     color: '#0a1f33',
+      margin: 0
+     },
+  subtitulo: {
+     color: '#7f8c8d',
+      margin: '5px 0 0 0' 
+    },
+  gridCards: { 
+    display: 'flex',
+     gap: '20px',
+      alignItems: 'flex-end',
+       marginBottom: '40px' 
+      },
+  columnaAccion: { 
+    display: 'flex',
+     flexDirection: 'column', 
+     gap: '15px',
+      flex: '1',
+       minWidth: '200px'
+       },
+  card: {
+     flex: '1', 
+     minWidth: '200px',
+      backgroundColor: '#fff',
+       padding: '20px',
+        textAlign: 'center',
+         boxShadow: '0 4px 6px rgba(0,0,0,0.05)', 
+         borderRadius: '12px'
+         },
+  btnNuevo: {
+     backgroundColor: '#b89241',
+      color: 'white',
+       border: 'none',
+        padding: '12px',
+         borderRadius: '8px',
+          fontWeight: 'bold',
+           cursor: 'pointer',
+            boxShadow: '0 4px 10px rgba(184, 146, 65, 0.3)'
+           },
+  cardValue: { 
+    fontSize: '2.2rem',
+     margin: '10px 0',
+      color: '#0a1f33' 
+    },
+  cardLabel: {
+     color: '#95a5a6',
+      fontWeight: 'bold', 
+      fontSize: '0.8rem',
+       textTransform: 'uppercase'
+       },
+  tablaWrapper: {
+     backgroundColor: 'white',
+      padding: '20px',
+       borderRadius: '12px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+       },
+  tabla: { 
+    width: '100%',
+     borderCollapse: 'collapse' 
+    },
+  filaHeader: {
+     textAlign: 'left', 
+     color: '#7f8c8d',
+      borderBottom: '2px solid #eee' 
+    },
+  filaBody: {
+     borderBottom: '1px solid #f1f1f1' 
+    },
+  celda: {
+     padding: '15px 10px' 
+    },
+  btnVer: {
+     backgroundColor: '#0a1f33', 
+     color: '#fff', 
+     border: 'none', 
+     padding: '6px 15px',
+      borderRadius: '4px',
+       cursor: 'pointer' 
+      },
+  tagFin: {
+     backgroundColor: '#d4edda',
+      color: '#155724',
+       padding: '4px 8px',
+        borderRadius: '4px', 
+        fontSize: '0.75rem' 
+      },
+  tagProc: { 
+    backgroundColor: '#fff3cd',
+     color: '#856404',
+      padding: '4px 8px', 
+      borderRadius: '4px',
+       fontSize: '0.75rem'
+       }
 };
 
 export default Dashboard;

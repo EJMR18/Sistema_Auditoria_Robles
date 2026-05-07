@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login'; 
 import Dashboard from './pages/Dashboard';
+import MainLayout from './components/MainLayout';
+import Usuarios from './pages/Usuarios';
 
 function App() {
   return (
@@ -13,7 +15,32 @@ function App() {
         <Route path="/login" element={<Login />} />
         
         {/**/}
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route 
+          path="/dashboard/*" 
+          element={
+            <MainLayout>
+              <Routes>
+                {/* 1. Inicio (El panel con tarjetas de auditorías) */}
+                <Route path="/" element={<Dashboard />} />
+                
+                {/* 2. Plantillas (Próximamente) */}
+                <Route path="plantillas" element={<div>Módulo de Plantillas (Próximamente)</div>} />
+                
+                {/* 3. Auditorías (Próximamente) */}
+                <Route path="auditorias" element={<div>Módulo de Auditorías (Próximamente)</div>} />
+                
+                {/* 4. Usuarios  */}
+                <Route path="usuarios" element={<Usuarios />} />
+                
+                {/* 5. Reportes (Próximamente) */}
+                <Route path="reportes" element={<div>Módulo de Reportes (Próximamente)</div>} />
+
+                {/* Si escriben una sub-ruta que no existe, los regresa al Inicio del Dashboard */}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </MainLayout>
+          } 
+        />
       </Routes>
     </BrowserRouter>
   );
