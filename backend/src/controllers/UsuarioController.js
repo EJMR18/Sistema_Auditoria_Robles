@@ -32,4 +32,21 @@ export const loginUsuario = async (req, res, next) => {
     }
 };
 
-export default { registrarUsuario, loginUsuario};
+export const obtenerUsuarios = async (req, res, next) => {
+    try {
+        // 1. Llamamos al servicio 
+        const usuarios = await UsuarioServices.obtenerTodosUsuarios();
+
+        // 2. Enviamos la respuesta en formato JSON
+        res.status(200).json({
+            exito: true,
+            mensaje: "Lista de usuarios de los Robles cargada",
+            data: usuarios
+        });
+    } catch (error) {
+        // 3. Si algo falla, el error sigue su camino
+        next(error);
+    }
+};
+
+export default { registrarUsuario, loginUsuario,obtenerUsuarios};
