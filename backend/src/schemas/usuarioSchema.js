@@ -36,3 +36,15 @@ export const registroSchema = z.object({
         required_error: "La contraseña es obligatoria"
     }).min(6, "La contraseña debe tener al menos 6 caracteres")
 });
+
+export const actualizacionSchema = z.object({
+    password: z.string()
+        .min(8, "La contraseña de Robles debe tener al menos 8 caracteres")
+        .max(50, "La contraseña es demasiado larga")
+        .optional(),
+    estado_activo: z.boolean({
+        invalid_type_error: "El estado debe ser verdadero o falso"
+    }).optional()
+}).refine(data => data.password !== undefined || data.estado_activo !== undefined, {
+    message: "Debes enviar al menos un campo para actualizar"
+});

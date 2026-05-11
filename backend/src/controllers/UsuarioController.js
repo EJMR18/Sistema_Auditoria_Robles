@@ -1,15 +1,21 @@
 import UsuarioServices from "../services/UsuarioService.js";
 
 export const registrarUsuario = async (req, res, next) => {
-    try{
-        const nuevoUsuario = await UsuarioServices.registrarUsuario(req.body);
+    try {
+        // combinamos los datos del cliente con el ID del token para llenar el creado_por
+        const datosUsuario = {
+            ...req.body,
+            creado_por: req.usuario.id_usuario 
+        };
+
+        const nuevoUsuario = await UsuarioServices.registrarUsuario(datosUsuario);
 
         res.status(201).json({
             exito: true, 
             mensaje: "Usuario creado con Exito",
             data: nuevoUsuario
         });
-    }catch(error){
+    } catch (error) {
         next(error);
     }
 };
@@ -49,4 +55,23 @@ export const obtenerUsuarios = async (req, res, next) => {
     }
 };
 
-export default { registrarUsuario, loginUsuario,obtenerUsuarios};
+export const actualizarUsuario = async (req, res, next) => {
+    try {
+        //usuario a cambiar
+        const { uuid } = req.params;
+        const datosNuevos = req.body; 
+        const usuarioModificador = req.usuario; 
+
+        const resultado = await UsuarioServices.actualizarUsuario(uuid, datosNuevos, usuarioModificador);
+
+        res.status(200).json({
+            exito: true,
+            mensaje: "Usuario actualizado correctamente",
+            data: resultado
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export default { registrarUsuario, loginUsuario, obtenerUsuarios, actualizarUsuario};
