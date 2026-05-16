@@ -35,5 +35,10 @@ class PlantillaServices {
         const plantillas = await Plantilla.obtenerTodas();
         return plantillas;
     }
+
+    static async obtenerPlantillaPorCodigo(codigo) {
+        const plantilla = await Plantilla.obtenerPorCodigo(codigo);
+        return plantilla; 
+    }
 }
 export default PlantillaServices;

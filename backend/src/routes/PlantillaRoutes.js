@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { crearPlantilla, obtenerPlantillas } from '../controllers/PlantillaController.js';
+import { crearPlantilla, obtenerPlantillaDetalle, obtenerPlantillas } from '../controllers/PlantillaController.js';
 import { crearPlantillaSchema } from '../schemas/plantillaSchema.js';
 
 import { verificarToken } from '../middlewares/auth.js';
@@ -15,7 +15,7 @@ router.use(verificarToken);
 router.post('/',verificarRol([ROLES.ADMIN]), validarSchema(crearPlantillaSchema), 
     crearPlantilla
 );
-
-router.get('/',verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), obtenerPlantillas)
+router.get('/',verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), obtenerPlantillas);
+router.get('/:codigo',verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), obtenerPlantillaDetalle)
 
 export default router;

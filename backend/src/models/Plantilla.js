@@ -70,11 +70,46 @@ class Plantilla {
                 version, 
                 creado_en
             FROM sar_plantillas
-            WHERE deshabilitado_en IS NULL
+            WHERE inhabilitado_en IS NULL
             ORDER BY creado_en DESC;
         `;
         const { rows } = await pool.query(query);
         return rows;
+    }
+
+    static async obtenerPorCodigo(codigo_plantilla) {
+        const queryPlantilla = `
+            SELECT 
+                id_plantilla, 
+                codigo_plantilla, 
+                nombre_plantilla, 
+                descripcion, 
+                version, 
+                creado_en
+            FROM sar_plantillas
+            WHERE codigo_plantilla = $1 AND inhabilitado_por IS NULL;
+        `;
+        const { rows: filasPlantilla } = await pool.query(queryPlantilla, [codigo_plantilla]);
+        if (filasPlantilla.length === 0) {
+            return null;
+        }
+        const plantillaOriginal = filasPlantilla[0];
+        const queryPreguntas = `
+            SELECT 
+                id_pregunta, 
+                texto_pregunta, 
+                orden
+            FROM sar_preguntas_plantillas
+            WHERE id_plantilla = $1
+            ORDER BY orden ASC;
+        `;
+        const { rows: preguntas } = await pool.query(queryPreguntas, [plantillaOriginal.id_plantilla]);
+        //separamos id plantilla del resto de datos
+        const { id_plantilla, ...plantillaLimpia } = plantillaOriginal;
+        return {
+            ...plantillaLimpia,
+            preguntas
+        };
     }
 }
 export default Plantilla;
