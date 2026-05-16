@@ -28,3 +28,26 @@ export const obtenerPlantillas = async (req, res, next) => {
         next(error); 
     }
 };
+
+export const obtenerPlantillaDetalle = async (req, res, next) => {
+    try {
+        //sacamos el codigo
+        const { codigo } = req.params; 
+        
+        const plantilla = await PlantillaServices.obtenerPlantillaPorCodigo(codigo);
+        //si es null
+        if (!plantilla) {
+            return res.status(404).json({
+                estado: 'error',
+                mensaje: `No se encontró ninguna plantilla activa con el codigo: ${codigo}`
+            });
+        }
+        res.status(200).json({
+            estado: 'exito',
+            datos: plantilla
+        });
+
+    } catch (error) {
+        next(error); 
+    }
+};
