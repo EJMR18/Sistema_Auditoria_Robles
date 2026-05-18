@@ -87,7 +87,7 @@ class Plantilla {
                 version, 
                 creado_en
             FROM sar_plantillas
-            WHERE codigo_plantilla = $1 AND inhabilitado_por IS NULL;
+            WHERE codigo_plantilla = $1 AND inhabilitado_en IS NULL;
         `;
         const { rows: filasPlantilla } = await pool.query(queryPlantilla, [codigo_plantilla]);
         if (filasPlantilla.length === 0) {
@@ -110,6 +110,25 @@ class Plantilla {
             ...plantillaLimpia,
             preguntas
         };
+    }
+
+    static async inhabilitarPlantilla(codigo_plantilla, id_usuario) {
+        const query = `
+            UPDATE sar_plantillas
+            SET 
+                inhabilitado_por = $1,
+                inhabilitado_en = NOW()
+            WHERE codigo_plantilla = $2 AND inhabilitado_en IS NULL
+            RETURNING codigo_plantilla, nombre_plantilla;
+        `;
+
+        const { rows } = await pool.query(query, [id_usuario, codigo_plantilla]);
+
+        //si no hay filas se asume que no existe el registro o que ya esta inhabilitado
+        if (rows.length === 0) {
+            return null;
+        }
+        return rows[0];
     }
 }
 export default Plantilla;
