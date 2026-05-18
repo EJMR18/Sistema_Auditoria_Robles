@@ -40,5 +40,10 @@ class PlantillaServices {
         const plantilla = await Plantilla.obtenerPorCodigo(codigo);
         return plantilla; 
     }
+
+    static async inhabilitarPlantilla(codigo_plantilla, id_usuario) {
+        const resultado = await Plantilla.inhabilitarPlantilla(codigo_plantilla, id_usuario);
+        return resultado; 
+    }
 }
 export default PlantillaServices;

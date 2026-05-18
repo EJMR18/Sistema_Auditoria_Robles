@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { crearPlantilla, obtenerPlantillaDetalle, obtenerPlantillas } from '../controllers/PlantillaController.js';
+import { crearPlantilla, obtenerPlantillaDetalle, obtenerPlantillas, inhabilitarPlantilla } from '../controllers/PlantillaController.js';
 import { crearPlantillaSchema } from '../schemas/plantillaSchema.js';
 
 import { verificarToken } from '../middlewares/auth.js';
@@ -16,6 +16,9 @@ router.post('/',verificarRol([ROLES.ADMIN]), validarSchema(crearPlantillaSchema)
     crearPlantilla
 );
 router.get('/',verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), obtenerPlantillas);
-router.get('/:codigo',verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), obtenerPlantillaDetalle)
+
+//rutas dinamicas, estas siempre deben ir despues de las rutas fijas como las de arriba
+router.get('/:codigo',verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), obtenerPlantillaDetalle);
+router.delete('/:codigo', verificarRol([ROLES.ADMIN]), inhabilitarPlantilla);
 
 export default router;
