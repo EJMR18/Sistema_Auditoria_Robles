@@ -5,7 +5,8 @@ import pool from './config/db.js';
 import usuarioRoutes from './routes/UsuarioRoutes.js';
 import dashboardRoutes from './routes/DashboardRoutes.js';
 import errorHandler from './middlewares/errorHandler.js';
-import plantillaRoutes from './routes/PlantillaRoutes.js'
+import plantillaRoutes from './routes/PlantillaRoutes.js';
+import auditoriaRoutes from './routes/AuditoriaRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/plantilla', plantillaRoutes);
+app.use('/api/auditoria', auditoriaRoutes);
 
 app.get('/', (req, res) => {
     res.send('¡Servidor de Robles S.A. en línea y funcionando!');
