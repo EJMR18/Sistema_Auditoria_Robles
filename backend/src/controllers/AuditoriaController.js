@@ -47,3 +47,22 @@ export const actualizarAuditoria = async (req, res, next) => {
         next(error);
     }
 };
+
+export const iniciarAuditoria = async (req, res, next) => {
+    try {
+        const { id } = req.params; 
+        const { id_usuario: id_usuario_peticion } = req.usuario;
+        const auditoriaIniciada =
+        await AuditoriaServices.iniciarAuditoria(
+        id,
+        id_usuario_peticion
+    );
+        res.status(200).json({
+            estado: 'exito',
+            mensaje: 'Auditoría iniciada correctamente. El tiempo de ejecución ha comenzado.',
+            datos: auditoriaIniciada
+        });
+    } catch (error) {
+        next(error);
+    }
+};

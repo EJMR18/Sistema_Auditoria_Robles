@@ -114,5 +114,25 @@ class AuditoriaServices {
         }
         return auditoriaActualizada;
     }
+    //iniciar la ejecucion de auditoria
+    static async iniciarAuditoria(id_auditoria, id_usuario_peticion) {
+        const auditoria = await Auditoria.buscarPorId(id_auditoria);
+        if (auditoria === null) {
+            throw new AppError('La auditoría solicitada no existe o ha sido inhabilitada.', 404);
+        }
+        if (auditoria.estado !== 'CREADA') {
+            throw new AppError(`La auditoría no puede iniciarse porque se encuentra en estado '${auditoria.estado}'.`, 400);
+        }
+        if (Number(auditoria.id_auditor) !== Number(id_usuario_peticion)) {
+            throw new AppError('Solo el auditor asignado puede iniciar esta auditoría.', 403);
+        }
+        //ejecutar update
+        const auditoriaIniciada = await Auditoria.iniciarAuditoria(id_auditoria);
+        //validacion contra Condiciones de Carrera
+        if (auditoriaIniciada == null) {
+            throw new AppError('La auditoría ya no se encuentra disponible para iniciar.', 409);
+        }
+        return auditoriaIniciada;
+    }
 }
 export default AuditoriaServices;
