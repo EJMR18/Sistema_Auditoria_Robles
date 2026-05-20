@@ -77,5 +77,42 @@ class AuditoriaServices {
         }
         return auditoriaInhabilitada;
     }
+  //modificar una auditoria planificada
+    static async actualizarAuditoria(id_auditoria, datos, actualizado_por) {
+        const { id_plantilla, id_auditor } = datos;
+        //buscamos la auditoria
+        const auditoria = await Auditoria.buscarPorId(id_auditoria);
+        if (auditoria == null) {
+            throw new AppError('No se ha podido actualizar la auditoría.', 404);
+        }
+        //validacion de Estado
+        if (auditoria.estado !== 'CREADA') {
+            throw new AppError(`No se puede modificar la auditoría porque ya se encuentra en estado '${auditoria.estado}'.`, 400);
+        }
+        const plantillaCambio = Number(auditoria.id_plantilla) !== id_plantilla;
+        const auditorCambio = Number(auditoria.id_auditor) !== id_auditor;
+        if (!plantillaCambio && !auditorCambio) {
+            throw new AppError('No se detectaron cambios en la plantilla ni en el auditor para actualizar.', 400);
+        }
+        if (plantillaCambio) {
+            const plantillaActiva = await Auditoria.validarPlantillaActiva(id_plantilla);
+            if (!plantillaActiva) {
+                throw new AppError('La plantilla seleccionada no existe o se encuentra inhabilitada.', 404);
+            }
+        }
+        //validar si el nuevo Auditor es valido
+        if (auditorCambio) {
+            const esAuditor = await Auditoria.validarUsuarioConRol(id_auditor, ROLES.AUDITOR);
+            if (!esAuditor) {
+                throw new AppError('El usuario asignado no existe, está inhabilitado o no tiene el rol de AUDITOR.', 400);
+            }
+        }
+        const auditoriaActualizada = await Auditoria.actualizarAuditoria(id_auditoria, datos, actualizado_por);
+        //proteccion contra Condiciones de Carrera
+        if (auditoriaActualizada == null) {
+            throw new AppError('No fue posible actualizar la auditoría. Es posible que haya sido modificada por otro proceso.', 409);
+        }
+        return auditoriaActualizada;
+    }
 }
 export default AuditoriaServices;
