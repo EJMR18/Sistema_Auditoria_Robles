@@ -52,3 +52,24 @@ export const idAuditoriaSchema = z.object({
         message:'El ID debe ser un número positivo'
     })
 }).strict();
+
+export const actualizarAuditoriaSchema = z.object({
+    id_plantilla: z.number({
+        required_error: "El id_plantilla es obligatorio",
+        invalid_type_error: "El id_plantilla debe ser un número"
+    }).int({
+        message: "El id_plantilla debe ser un número entero"
+    }).positive({
+        message: "El id_plantilla debe ser un número positivo"
+    }),
+    id_auditor: z.number({
+        required_error: "El id_auditor es obligatorio",
+        invalid_type_error: "El id_auditor debe ser un número"
+    }).int({
+        message: "El id_auditor debe ser un número entero"
+    }).positive({
+        message: "El id_auditor debe ser un número positivo"
+    })
+}).strict({
+    message: "La petición contiene campos no permitidos."
+});

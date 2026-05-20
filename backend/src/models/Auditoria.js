@@ -84,7 +84,8 @@ class Auditoria {
                 uuid_auditoria,
                 codigo_auditoria, 
                 estado, 
-                tipo_auditoria, 
+                tipo_auditoria,
+                id_plantilla,
                 id_planta, 
                 id_area, 
                 id_empleado_auditado, 
@@ -118,6 +119,38 @@ class Auditoria {
                 inhabilitado_por;
         `;
         const { rows } = await pool.query(query, [inhabilitado_por, id_auditoria]);
+        return rows[0] ?? null;
+    }
+    //Modificar Auditorias
+    static async actualizarAuditoria(id_auditoria, datos, actualizado_por) {
+        const { id_plantilla, id_auditor } = datos;
+        const query = `
+            UPDATE sar_auditorias
+            SET 
+                id_plantilla = $1,
+                id_auditor = $2,
+                actualizado_en = CURRENT_TIMESTAMP,
+                actualizado_por = $3
+            WHERE 
+                id_auditoria = $4
+                AND inhabilitado_en IS NULL
+            RETURNING 
+                id_auditoria, 
+                codigo_auditoria, 
+                tipo_auditoria,
+                estado, 
+                id_plantilla,
+                id_auditor,
+                actualizado_en,
+                actualizado_por;
+        `;
+        const values = [
+            id_plantilla,
+            id_auditor,
+            actualizado_por,
+            id_auditoria
+        ];
+        const { rows } = await pool.query(query, values);
         return rows[0] ?? null;
     }
 }

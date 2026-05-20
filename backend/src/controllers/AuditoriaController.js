@@ -31,3 +31,19 @@ export const inhabilitarAuditoria = async (req, res, next) => {
         next(error);
     }
 };
+
+export const actualizarAuditoria = async (req, res, next) => {
+    try {
+        const { id } = req.params; 
+        const datosActualizacion = req.body; 
+        const { id_usuario: actualizado_por } = req.usuario; 
+        const auditoriaActualizada = await AuditoriaServices.actualizarAuditoria(id, datosActualizacion, actualizado_por);
+        res.status(200).json({
+            estado: 'exito',
+            mensaje: 'Auditoría actualizada correctamente.',
+            datos: auditoriaActualizada
+        });     
+    } catch (error) {
+        next(error);
+    }
+};
