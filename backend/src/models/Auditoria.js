@@ -76,5 +76,49 @@ class Auditoria {
         const { rows } = await pool.query(query, [id_usuario, id_rol]);
         return rows.length > 0;
     }
+    //buscar una auditoria por su ID
+    static async buscarPorId(id_auditoria) {
+        const query = `
+            SELECT 
+                id_auditoria, 
+                uuid_auditoria,
+                codigo_auditoria, 
+                estado, 
+                tipo_auditoria, 
+                id_planta, 
+                id_area, 
+                id_empleado_auditado, 
+                id_auditor, 
+                creado_por, 
+                fecha_inicio, 
+                fecha_fin,
+                creado_en
+            FROM sar_auditorias 
+            WHERE id_auditoria = $1 
+            AND inhabilitado_en IS NULL;
+        `;
+        const { rows } = await pool.query(query, [id_auditoria]);
+        return rows[0] ?? null;
+    }
+    //inhabilitar una auditoria
+    static async inhabilitar(id_auditoria, inhabilitado_por) {
+        const query = `
+            UPDATE sar_auditorias
+            SET 
+                inhabilitado_en = CURRENT_TIMESTAMP,
+                inhabilitado_por = $1
+            WHERE 
+                id_auditoria = $2
+                AND inhabilitado_en IS NULL
+            RETURNING 
+                id_auditoria, 
+                codigo_auditoria, 
+                estado, 
+                inhabilitado_en, 
+                inhabilitado_por;
+        `;
+        const { rows } = await pool.query(query, [inhabilitado_por, id_auditoria]);
+        return rows[0] ?? null;
+    }
 }
 export default Auditoria;
