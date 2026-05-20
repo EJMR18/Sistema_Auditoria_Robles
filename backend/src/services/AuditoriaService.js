@@ -58,5 +58,24 @@ class AuditoriaServices {
         const nuevaAuditoria = await Auditoria.crear(datosSeguros);
         return nuevaAuditoria;
     }
+    // Inhabilitar una auditoría planificada
+    static async inhabilitarAuditoria(id_auditoria, inhabilitado_por) {
+        //buscamos si la auditoría existe y esta activa
+        const auditoria = await Auditoria.buscarPorId(id_auditoria);
+        if (auditoria == null) {
+            throw new AppError('La auditoría solicitada no fue encontrada.', 404);
+        }
+        //solo se permite la cancelacion si la auditoria no ha iniciado
+        if (auditoria.estado !== 'CREADA') {
+            throw new AppError(`No se puede inhabilitar la auditoría porque ya se encuentra en estado '${auditoria.estado}'.`, 400);
+        }
+        //ejecucion del borrado logico en la BD
+        const auditoriaInhabilitada = await Auditoria.inhabilitar(id_auditoria, inhabilitado_por);
+        //proteccion contra Condiciones de Carrera
+        if (auditoriaInhabilitada == null) {
+            throw new AppError('No fue posible inhabilitar la auditoría.', 409);
+        }
+        return auditoriaInhabilitada;
+    }
 }
 export default AuditoriaServices;

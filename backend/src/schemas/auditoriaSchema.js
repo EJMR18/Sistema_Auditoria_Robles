@@ -39,3 +39,16 @@ export const crearAuditoriaSchema = z.object({
 }).strict({
     message: "La petición contiene campos no permitidos o irreconocibles."
 });
+//inhabilitar
+export const idAuditoriaSchema = z.object({
+    id: z.coerce.number({
+        required_error: 'El ID de la auditoría es obligatorio',
+        invalid_type_error: 'El ID debe ser un número válido'
+    })
+    .int({
+        message:'El ID debe ser un número entero'
+    })
+    .positive({
+        message:'El ID debe ser un número positivo'
+    })
+}).strict();
