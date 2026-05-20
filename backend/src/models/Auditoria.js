@@ -153,5 +153,26 @@ class Auditoria {
         const { rows } = await pool.query(query, values);
         return rows[0] ?? null;
     }
+    //iniciar una auditoria
+    static async iniciarAuditoria(id_auditoria) {
+        const query = `
+            UPDATE sar_auditorias
+            SET 
+                estado = 'EN_PROCESO',
+                fecha_inicio = CURRENT_TIMESTAMP
+            WHERE 
+                id_auditoria = $1
+                AND estado = 'CREADA'
+                AND inhabilitado_en IS NULL
+            RETURNING 
+                id_auditoria, 
+                codigo_auditoria, 
+                estado, 
+                fecha_inicio,
+                id_auditor;
+        `;
+        const { rows } = await pool.query(query, [id_auditoria]);
+        return rows[0] ?? null;
+    }
 }
 export default Auditoria;

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { crearAuditoria, inhabilitarAuditoria, actualizarAuditoria } from '../controllers/auditoriaController.js';
+import { crearAuditoria, inhabilitarAuditoria, actualizarAuditoria, iniciarAuditoria } from '../controllers/auditoriaController.js';
 import { crearAuditoriaSchema, idAuditoriaSchema, actualizarAuditoriaSchema } from '../schemas/auditoriaSchema.js';
 import { validarSchema } from '../middlewares/validarSchema.js';
 import { verificarRol } from '../middlewares/verificarRol.js';
@@ -17,5 +17,8 @@ router.patch('/:id',verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), validarSchema(id
 );
 router.patch(
     '/:id/inhabilitar',verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), validarSchema(idAuditoriaSchema, 'params'), inhabilitarAuditoria
+);
+router.patch(
+    '/:id/iniciar',verificarRol([ROLES.AUDITOR]), validarSchema(idAuditoriaSchema, 'params'), iniciarAuditoria
 );
 export default router;
