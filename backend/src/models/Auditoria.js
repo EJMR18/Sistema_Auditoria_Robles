@@ -174,5 +174,205 @@ class Auditoria {
         const { rows } = await pool.query(query, [id_auditoria]);
         return rows[0] ?? null;
     }
+    //================================METODO PRINCIPAL DE RESPUESTAS Y OBSERVACIONES============================================
+    //verificar si la pregunta ya fue respondida
+    static async verificarRespuestaExistente(id_auditoria, id_pregunta) {
+        const query = `
+            SELECT 1 
+            FROM sar_respuestas_auditorias 
+            WHERE id_auditoria = $1 AND id_pregunta = $2
+            LIMIT 1;
+        `;
+        const { rows } = await pool.query(query, [id_auditoria, id_pregunta]);
+        return !!rows[0];
+    }
+    //validar que la pregunta pertenece a la plantilla de la auditoria
+    static async validarPreguntaEnPlantilla(id_auditoria, id_pregunta) {
+        const query = `
+            SELECT 1
+            FROM sar_auditorias a
+            JOIN sar_preguntas_plantillas p ON a.id_plantilla = p.id_plantilla
+            WHERE a.id_auditoria = $1 AND p.id_pregunta = $2
+            LIMIT 1;
+        `;
+        const { rows } = await pool.query(query, [id_auditoria, id_pregunta]);
+        return !!rows[0];
+    }
+    static async registrarRespuestaTransaccion(id_auditoria, datosRespuesta, id_usuario, debeAbortar) {
+        const { id_pregunta, valor_respuesta, observacion } = datosRespuesta;
+        const client = await pool.connect(); 
+
+        try {
+            await client.query('BEGIN'); 
+            //insertar la Respuesta principal
+            const queryRespuesta = `
+                INSERT INTO sar_respuestas_auditorias (id_auditoria, id_pregunta, valor_respuesta, creado_por) 
+                VALUES ($1, $2, $3, $4) 
+                RETURNING id_respuesta;
+            `;
+            const { rows: rowsRespuesta } = await client.query(queryRespuesta, [
+                id_auditoria, id_pregunta, valor_respuesta, id_usuario
+            ]);
+
+            if (!rowsRespuesta[0]) {
+                throw new AppError('No fue posible registrar la respuesta en la base de datos.', 500);
+            }
+
+            const idRespuesta = rowsRespuesta[0].id_respuesta;
+            let observacionInsertada = null;
+            //insertar Observacion si aplica
+            if (observacion?.descripcion?.trim()) {
+                const queryObservacion = `
+                    INSERT INTO sar_observaciones (id_respuesta, descripcion_observacion, nivel_criticidad, creado_por) 
+                    VALUES ($1, $2, $3, $4) 
+                    RETURNING id_observacion, descripcion_observacion, nivel_criticidad;
+                `;
+                const { rows: rowsObs } = await client.query(queryObservacion, [
+                    idRespuesta, 
+                    observacion.descripcion.trim(), 
+                    observacion.criticidad ?? null, 
+                    id_usuario
+                ]);
+                observacionInsertada = rowsObs[0];
+            }
+            //abortar si el Service lo ordena
+            if (debeAbortar) {
+                const queryAbortar = `
+                    UPDATE sar_auditorias
+                    SET 
+                        estado = 'ABORTADA',
+                        fecha_fin = CURRENT_TIMESTAMP,
+                        actualizado_en = CURRENT_TIMESTAMP,
+                        actualizado_por = $1
+                    WHERE 
+                        id_auditoria = $2
+                        AND estado = 'EN_PROCESO'
+                        AND inhabilitado_en IS NULL
+                    RETURNING id_auditoria; 
+                `;
+                const { rows: rowsAbortar } = await client.query(queryAbortar, [id_usuario, id_auditoria]);
+                
+                if (!rowsAbortar[0]) {
+                    throw new AppError('No se pudo abortar la auditoría porque ya no se encuentra en estado EN_PROCESO.', 409);
+                }
+            }
+            await client.query('COMMIT'); 
+            return {
+                id_respuesta: idRespuesta,
+                id_pregunta,
+                valor_respuesta,
+                observacion: observacionInsertada,
+                estado_actual_auditoria: debeAbortar ? 'ABORTADA' : 'EN_PROCESO'
+            };
+
+        } catch (error) {
+            try {
+                await client.query('ROLLBACK'); 
+            } catch (rollbackError) {} 
+            if (error.code === '23505') {
+                throw new AppError('Esta pregunta ya ha sido respondida previamente.', 409);
+            }
+            throw error;
+        } finally {
+            client.release(); 
+        }
+    }
+
+    //validar que no se hayan saltado preguntas anteriores
+    static async verificarPreguntasSaltadas(id_auditoria, id_pregunta) {
+        const query = `
+            SELECT 1
+            FROM sar_preguntas_plantillas p_todas
+            JOIN sar_auditorias a
+                ON a.id_plantilla = p_todas.id_plantilla
+
+            LEFT JOIN sar_respuestas_auditorias r
+                ON r.id_pregunta = p_todas.id_pregunta
+                AND r.id_auditoria = a.id_auditoria
+
+            WHERE
+                a.id_auditoria = $1
+                AND r.id_respuesta IS NULL
+
+                AND p_todas.orden < (
+                    SELECT p_actual.orden
+                    FROM sar_preguntas_plantillas p_actual
+                    JOIN sar_auditorias a2
+                        ON a2.id_plantilla = p_actual.id_plantilla
+                    WHERE
+                        a2.id_auditoria = $1
+                        AND p_actual.id_pregunta = $2
+                )
+
+            LIMIT 1;
+        `;
+    const { rows } = await pool.query(query, [
+        id_auditoria,
+        id_pregunta
+    ]);
+    return !!rows[0];
+    }
+
+    //verificar si hay preguntas sin responder
+    static async verificarPreguntasPendientes(id_auditoria) {
+        const query = `
+            SELECT 1
+            FROM sar_auditorias a
+            JOIN sar_preguntas_plantillas p ON a.id_plantilla = p.id_plantilla
+            LEFT JOIN sar_respuestas_auditorias r 
+                   ON r.id_pregunta = p.id_pregunta 
+                  AND r.id_auditoria = a.id_auditoria
+            WHERE 
+                a.id_auditoria = $1 
+                AND r.id_respuesta IS NULL -- Busca si existe al menos un "hueco" (pregunta sin respuesta)
+            LIMIT 1;
+        `;
+        const { rows } = await pool.query(query, [id_auditoria]);
+        return !!rows[0]; //true, significa que aun faltan preguntas por responder
+    }
+
+    //finalizar la auditoria
+    static async finalizarAuditoria(id_auditoria, id_usuario) {
+        const query = `
+            UPDATE sar_auditorias
+            SET 
+                estado = 'FINALIZADA',
+                fecha_fin = CURRENT_TIMESTAMP,
+                actualizado_en = CURRENT_TIMESTAMP,
+                actualizado_por = $1
+            WHERE 
+                id_auditoria = $2
+                AND estado = 'EN_PROCESO'
+                AND inhabilitado_en IS NULL
+            RETURNING 
+                id_auditoria, 
+                codigo_auditoria, 
+                estado, 
+                fecha_fin;
+        `;
+        const { rows } = await pool.query(query, [id_usuario, id_auditoria]);
+        return rows[0] ?? null;
+    }
+
+    //obtener estadisticas de respuestas para calificacion
+    static async obtenerEstadisticasRespuestas(id_auditoria) {
+        const query = `
+            SELECT 
+                COUNT(*) FILTER (WHERE valor_respuesta = 'SI') AS total_si,
+                COUNT(*) FILTER (WHERE valor_respuesta = 'NO') AS total_no,
+                COUNT(*) FILTER (WHERE valor_respuesta = 'NA') AS total_na
+            FROM sar_respuestas_auditorias
+            WHERE 
+                id_auditoria = $1
+                AND inhabilitado_en IS NULL;
+        `;
+        const { rows } = await pool.query(query, [id_auditoria]);
+        const estadisticas = rows[0] ?? {};
+        return {
+            total_si: Number(estadisticas.total_si ?? 0),
+            total_no: Number(estadisticas.total_no ?? 0),
+            total_na: Number(estadisticas.total_na ?? 0)
+        };
+    }
 }
 export default Auditoria;

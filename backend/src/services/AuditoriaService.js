@@ -1,6 +1,7 @@
 import Auditoria from '../models/Auditoria.js';
 import AppError from '../utils/AppError.js';
 import { ROLES } from '../constant/roles.js';
+import { META_APROBACION_AUDITORIA } from '../constant/auditorias.js';
 
 class AuditoriaServices {
     static async crearAuditoria(datosAuditoria, creado_por) {
@@ -133,6 +134,108 @@ class AuditoriaServices {
             throw new AppError('La auditoría ya no se encuentra disponible para iniciar.', 409);
         }
         return auditoriaIniciada;
+    }
+    //registrar Respuesta
+    static async registrarRespuesta(id_auditoria, datosRespuesta, id_usuario_peticion) {
+        //validar que la auditoria exista
+        const auditoria = await Auditoria.buscarPorId(id_auditoria);
+        if (!auditoria) {
+            throw new AppError('La auditoría solicitada no existe o ha sido inhabilitada.', 404);
+        }
+        //Solo se responde si esta EN_PROCESO
+        if (auditoria.estado !== 'EN_PROCESO') {
+            throw new AppError(`No se pueden registrar respuestas porque la auditoría está en estado '${auditoria.estado}'.`, 400);
+        }
+        //Solo el auditor asignado puede responder
+        if (Number(auditoria.id_auditor) !== Number(id_usuario_peticion)) {
+            throw new AppError('Acceso denegado. Solo el auditor asignado puede registrar respuestas en esta auditoría.', 403);
+        }
+        //validar que la pregunta pertenezca a la plantilla de esta auditoria
+        const preguntaPertenece = await Auditoria.validarPreguntaEnPlantilla(id_auditoria, datosRespuesta.id_pregunta);
+        if (!preguntaPertenece) {
+            throw new AppError('La pregunta enviada no pertenece a la plantilla configurada para esta auditoría.', 400);
+        }
+        //evitar respuestas duplicadas
+        const yaRespondida = await Auditoria.verificarRespuestaExistente(id_auditoria, datosRespuesta.id_pregunta);
+        if (yaRespondida) {
+            throw new AppError('Esta pregunta ya ha sido respondida. Las respuestas en ejecución son inmutables.', 409);
+        }
+
+        const hayPreguntasSaltadas =
+            await Auditoria.verificarPreguntasSaltadas(
+                id_auditoria,
+                datosRespuesta.id_pregunta
+        );
+        if (hayPreguntasSaltadas) {
+            throw new AppError(
+                'Debe responder las preguntas anteriores antes de continuar.',
+                400
+            );
+        }
+        //determinar si la criticidad obliga a abortar
+        const tieneObservacion = !!datosRespuesta.observacion?.descripcion?.trim();
+        const debeAbortar = tieneObservacion && datosRespuesta.observacion?.criticidad === 'CRITICA';
+        //si hay una colision de concurrencia extrema, la Capa 2 saltara desde aquí
+        const resultado = await Auditoria.registrarRespuestaTransaccion(
+            id_auditoria, 
+            datosRespuesta, 
+            id_usuario_peticion, 
+            debeAbortar
+        );
+        return resultado;
+    }
+
+    //finalizar la Auditoria
+    static async finalizarAuditoria(id_auditoria, id_usuario_peticion) {
+        
+        //validar existencia
+        const auditoria = await Auditoria.buscarPorId(id_auditoria);
+        if (!auditoria) {
+            throw new AppError('La auditoría solicitada no existe o ha sido inhabilitada.', 404);
+        }
+        //validar estado
+        if (auditoria.estado !== 'EN_PROCESO') {
+            throw new AppError(`La auditoría no puede finalizarse porque se encuentra en estado '${auditoria.estado}'.`, 400);
+        }
+        //validar propiedad
+        if (Number(auditoria.id_auditor) !== Number(id_usuario_peticion)) {
+            throw new AppError('Acceso denegado. Solo el auditor asignado puede finalizar esta auditoría.', 403);
+        }
+        //validar preguntas pendientes
+        const tienePreguntasPendientes = await Auditoria.verificarPreguntasPendientes(id_auditoria);
+        if (tienePreguntasPendientes) {
+            throw new AppError('No se puede finalizar la auditoría. Aún existen preguntas pendientes por responder en la plantilla.', 400);
+        }
+        const auditoriaFinalizada = await Auditoria.finalizarAuditoria(id_auditoria, id_usuario_peticion);
+        if (!auditoriaFinalizada) {
+            throw new AppError('No se pudo finalizar la auditoría. Es posible que haya sido modificada o abortada por otro proceso.', 409);
+        }
+
+        // evitar falsos positivos con NA
+        const estadisticas = await Auditoria.obtenerEstadisticasRespuestas(id_auditoria);
+        const preguntasEvaluables = estadisticas.total_si + estadisticas.total_no;
+        //se evaluo algo?
+        const sin_evaluacion = preguntasEvaluables === 0;
+        //calculo de calificacion porcentual sobre el total de preguntas evaluables (SI + NO), excluyendo NA
+        const calificacionPorcentaje = sin_evaluacion 
+            ? 0 
+            : (estadisticas.total_si / preguntasEvaluables) * 100;
+        const aprobada = sin_evaluacion 
+            ? false 
+            : calificacionPorcentaje >= META_APROBACION_AUDITORIA;
+        //retorno compuesto unificado
+        return {
+            ...auditoriaFinalizada,
+            resultados: {
+                total_si: estadisticas.total_si,
+                total_no: estadisticas.total_no,
+                total_na: estadisticas.total_na,
+                calificacion_porcentaje: Number(calificacionPorcentaje.toFixed(2)),
+                aprobada,
+                meta_requerida: META_APROBACION_AUDITORIA,
+                sin_evaluacion // <-- Bandera importantísima para el frontend
+            }
+        };
     }
 }
 export default AuditoriaServices;

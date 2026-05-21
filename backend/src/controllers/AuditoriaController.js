@@ -66,3 +66,42 @@ export const iniciarAuditoria = async (req, res, next) => {
         next(error);
     }
 };
+
+export const registrarRespuesta = async (req, res, next) => {
+    try {
+        const { id } = req.params; 
+        const datosRespuesta = req.body; 
+        const { id_usuario: id_usuario_peticion } = req.usuario; 
+        const resultado = await AuditoriaServices.registrarRespuesta(id, datosRespuesta, id_usuario_peticion);
+        const mensajeFinal = resultado.estado_actual_auditoria === 'ABORTADA'
+            ? 'Respuesta y observación crítica registradas. La auditoría ha sido ABORTADA por seguridad.'
+            : 'Respuesta registrada correctamente.';
+        res.status(201).json({ 
+            estado: 'exito',
+            mensaje: mensajeFinal,
+            datos: resultado
+        });
+        
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const finalizarAuditoria = async (req, res, next) => {
+    try {
+        const { id } = req.params; // ID de la auditoria
+        const { id_usuario: id_usuario_peticion } = req.usuario; // ID del auditor desde el token 
+        const auditoriaFinalizada = await AuditoriaServices.finalizarAuditoria(id, id_usuario_peticion);
+        //si la auditoria no se evaluo NA, mandamos un mensaje adecuado
+        const mensajeFinal = auditoriaFinalizada.resultados.sin_evaluacion
+            ? 'Auditoría finalizada correctamente, pero cerró sin evaluación por contener únicamente respuestas N/A.'
+            : `Auditoría finalizada correctamente. Calificación: ${auditoriaFinalizada.resultados.calificacion_porcentaje}%.`;
+        res.status(200).json({
+            estado: 'exito',
+            mensaje: mensajeFinal,
+            datos: auditoriaFinalizada
+        });     
+    } catch (error) {
+        next(error);
+    }
+};

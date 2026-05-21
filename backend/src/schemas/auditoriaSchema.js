@@ -73,3 +73,44 @@ export const actualizarAuditoriaSchema = z.object({
 }).strict({
     message: "La petición contiene campos no permitidos."
 });
+
+export const registrarRespuestaSchema = z.object({
+    id_pregunta: z.number({
+        required_error: "El id_pregunta es obligatorio",
+        invalid_type_error: "El id_pregunta debe ser un número"
+    }).int({
+        message: "El id_pregunta debe ser un número entero"
+    }).positive({
+        message: "El id_pregunta debe ser un número positivo"
+    }),
+    valor_respuesta: z.enum(['SI', 'NO', 'NA'], {
+        required_error: "El valor_respuesta es obligatorio",
+        invalid_type_error: "El valor_respuesta debe ser 'SI', 'NO' o 'NA'"
+    }),
+    observacion: z.object({
+        descripcion: z.string()
+            .trim()
+            .min(1, "La descripción no puede estar vacía")
+            .optional(),
+        criticidad: z.enum(['BAJA', 'MEDIA', 'ALTA', 'CRITICA'], {
+            invalid_type_error: "Criticidad no válida"
+        }).optional()
+    })
+    .strict()
+    .refine(
+        data => !data.criticidad || !!data.descripcion,
+        {
+            message: 'Si se especifica criticidad, es obligatorio incluir una descripción.',
+            path: ['descripcion']
+        }
+    )
+    .refine(
+        data => !!data.descripcion || !!data.criticidad,
+        {
+            message: 'La observación no puede estar vacía.'
+        }
+    )
+    .optional()
+}).strict({
+    message: "La petición contiene campos no permitidos."
+});

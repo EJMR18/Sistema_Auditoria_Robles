@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { crearAuditoria, inhabilitarAuditoria, actualizarAuditoria, iniciarAuditoria } from '../controllers/auditoriaController.js';
-import { crearAuditoriaSchema, idAuditoriaSchema, actualizarAuditoriaSchema } from '../schemas/auditoriaSchema.js';
+import { crearAuditoria, inhabilitarAuditoria, actualizarAuditoria, iniciarAuditoria, registrarRespuesta, finalizarAuditoria } from '../controllers/auditoriaController.js';
+import { crearAuditoriaSchema, idAuditoriaSchema, actualizarAuditoriaSchema, registrarRespuestaSchema } from '../schemas/auditoriaSchema.js';
 import { validarSchema } from '../middlewares/validarSchema.js';
 import { verificarRol } from '../middlewares/verificarRol.js';
 import { verificarToken } from '../middlewares/auth.js';
 import { ROLES } from '../constant/roles.js';
 
 const router = Router();
-
+//todas las rutas de abajo requieren autenticacion
 router.use(verificarToken);
 
 router.post(
@@ -20,5 +20,12 @@ router.patch(
 );
 router.patch(
     '/:id/iniciar',verificarRol([ROLES.AUDITOR]), validarSchema(idAuditoriaSchema, 'params'), iniciarAuditoria
+);
+router.post(
+    '/:id/respuestas',verificarRol([ROLES.AUDITOR]),validarSchema(idAuditoriaSchema, 'params'),validarSchema(registrarRespuestaSchema),registrarRespuesta               
+);
+router.patch(
+    '/:id/finalizar',
+    verificarRol([ROLES.AUDITOR]), validarSchema(idAuditoriaSchema, 'params'), finalizarAuditoria
 );
 export default router;
