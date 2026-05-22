@@ -2,6 +2,7 @@ import Reporte from '../models/Reporte.js';
 import { ROLES } from '../constant/roles.js';
 import AppError from '../utils/AppError.js';
 import CalculoAuditoria from '../utils/calculoAuditoria.js';
+import { enviarReporteCorreo } from '../utils/correoService.js';
 
 class ReporteServices {
     static async consultarHistorial(filtrosInput, usuarioPeticion) {
@@ -124,6 +125,27 @@ class ReporteServices {
                 observacion: r.descripcion_observacion || '', 
                 criticidad: r.nivel_criticidad || null
             }))
+        };
+    }
+
+    static async enviarPorCorreo(id_auditoria, correoDestino, usuarioPeticion) {
+        
+        const detalle = await this.obtenerDetalle(id_auditoria, usuarioPeticion);
+
+        try {
+            await enviarReporteCorreo(correoDestino, detalle);
+        } catch (error) {
+            console.error(
+                "Fallo interno de Nodemailer/Gmail:",
+                error.message
+            );
+            throw new AppError(
+                'No se pudo enviar el correo electrónico. Por favor, intente más tarde.',
+                500
+            );
+        }
+        return {
+            mensaje: 'Correo enviado correctamente'
         };
     }
 }

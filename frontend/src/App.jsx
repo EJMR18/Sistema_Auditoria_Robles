@@ -3,6 +3,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MainLayout from './components/MainLayout';
 import Usuarios from './pages/Usuarios';
+import HistorialReportes from './pages/HistorialReportes';
+import DetalleReporte from './pages/DetalleReporte';
 
 function App() {
   return (
@@ -32,8 +34,11 @@ function App() {
                 {/* 4. Usuarios  */}
                 <Route path="usuarios" element={<Usuarios />} />
                 
-                {/* 5. Reportes (Próximamente) */}
-                <Route path="reportes" element={<div>Módulo de Reportes (Próximamente)</div>} />
+                {/* 5. Reportes (Tabla General) */}
+                <Route path="reportes" element={<HistorialReportes />} />
+
+                {/* 6. Reportes (Detalle individual para el PDF) */}
+                <Route path="reportes/detalle/:id" element={<DetalleReporte />} />
 
                 {/* Si escriben una sub-ruta que no existe, los regresa al Inicio del Dashboard */}
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
