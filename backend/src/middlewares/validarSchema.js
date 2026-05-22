@@ -15,6 +15,11 @@ export const validarSchema = (schema, propiedad = 'body') => (req, res, next) =>
         });
     }
 
-    req[propiedad] = resultado.data;
+    Object.defineProperty(req, propiedad, {
+        value: resultado.data,
+        writable: true,
+        enumerable: true,
+        configurable: true
+    });
     next();
 };

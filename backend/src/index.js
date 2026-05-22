@@ -7,6 +7,7 @@ import dashboardRoutes from './routes/DashboardRoutes.js';
 import errorHandler from './middlewares/errorHandler.js';
 import plantillaRoutes from './routes/PlantillaRoutes.js';
 import auditoriaRoutes from './routes/AuditoriaRoutes.js';
+import reporteRoutes from './routes/ReporteRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,7 @@ app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/plantilla', plantillaRoutes);
 app.use('/api/auditoria', auditoriaRoutes);
+app.use('/api/reporte', reporteRoutes);
 
 app.get('/', (req, res) => {
     res.send('¡Servidor de Robles S.A. en línea y funcionando!');
