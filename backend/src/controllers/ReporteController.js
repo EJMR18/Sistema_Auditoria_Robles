@@ -16,3 +16,23 @@ export const obtenerHistorial = async (req, res, next) => {
         next(error);
     }
 };
+
+export const obtenerDetalle = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const usuarioPeticion = req.usuario;
+
+        const detalle = await ReporteServices.obtenerDetalle(
+            id,
+            usuarioPeticion
+        );
+
+        res.status(200).json({
+            estado: 'exito',
+            datos: detalle
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};

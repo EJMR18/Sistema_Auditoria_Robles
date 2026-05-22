@@ -88,6 +88,85 @@ class Reporte {
         const { rows } = await pool.query(query, params);
         return rows;
     }
+
+    //cabecera y conteos resumidos
+    static async obtenerDetalleReporte(id_auditoria) {
+        const query = `
+            SELECT 
+                a.id_auditoria,
+                a.id_auditor,
+                a.codigo_auditoria,
+                a.estado,
+                a.fecha_inicio,
+                a.fecha_fin,
+                COALESCE(
+                    NULLIF(
+                        CONCAT_WS(' ', emp.primer_nombre, emp.segundo_nombre, emp.primer_apellido, emp.segundo_apellido),
+                        ''
+                    ),
+                    'Sin empleado asociado'
+                ) AS auditor,
+                COALESCE(
+                    NULLIF(
+                        CONCAT_WS(' ', emp_aud.primer_nombre, emp_aud.segundo_nombre, emp_aud.primer_apellido, emp_aud.segundo_apellido),
+                        ''
+                    ),
+                    'No aplica / Personal general'
+                ) AS auditado,
+                pl.nombre_planta,
+                ar.nombre_area,
+                plan.nombre_plantilla,
+                COUNT(r.id_respuesta) FILTER (WHERE r.valor_respuesta = 'SI') AS conteo_si,
+                COUNT(r.id_respuesta) FILTER (WHERE r.valor_respuesta = 'NO') AS conteo_no,
+                COUNT(r.id_respuesta) FILTER (WHERE r.valor_respuesta = 'NA') AS conteo_na
+            FROM sar_auditorias a
+            JOIN sar_usuarios u ON a.id_auditor = u.id_usuario
+            LEFT JOIN sar_empleados emp ON u.id_empleado = emp.id_empleado
+            LEFT JOIN sar_empleados emp_aud ON a.id_empleado_auditado = emp_aud.id_empleado
+            JOIN sar_plantillas plan ON a.id_plantilla = plan.id_plantilla
+            LEFT JOIN sar_plantas pl ON a.id_planta = pl.id_planta 
+            LEFT JOIN sar_areas ar ON a.id_area = ar.id_area       
+            LEFT JOIN sar_respuestas_auditorias r ON a.id_auditoria = r.id_auditoria
+            WHERE a.id_auditoria = $1 AND a.inhabilitado_en IS NULL
+            GROUP BY 
+                a.id_auditoria,
+                a.id_auditor,
+                a.codigo_auditoria,
+                a.estado,
+                a.fecha_inicio,
+                a.fecha_fin,
+                emp.primer_nombre, emp.segundo_nombre, emp.primer_apellido, emp.segundo_apellido,
+                emp_aud.primer_nombre, emp_aud.segundo_nombre, emp_aud.primer_apellido, emp_aud.segundo_apellido,
+                pl.nombre_planta,
+                ar.nombre_area,
+                plan.nombre_plantilla;
+        `;
+        const { rows } = await pool.query(query, [id_auditoria]);
+        return rows[0];
+    }
+
+    //desglose de preguntas y respuestas blindado por plantilla
+    static async obtenerRespuestasDetalle(id_auditoria) {
+        const query = `
+            SELECT 
+                r.id_respuesta,
+                r.valor_respuesta,
+                o.descripcion_observacion,
+                o.nivel_criticidad,
+                p.orden AS num_pregunta, 
+                p.texto_pregunta
+            FROM sar_respuestas_auditorias r
+            -- Vinculamos la auditoría para obtener su id_plantilla correspondiente
+            JOIN sar_auditorias a ON r.id_auditoria = a.id_auditoria
+            -- Amarrando por id_pregunta e id_plantilla evitamos duplicados o cruces de orden incorrectos
+            JOIN sar_preguntas_plantillas p ON r.id_pregunta = p.id_pregunta AND p.id_plantilla = a.id_plantilla
+            LEFT JOIN sar_observaciones o ON r.id_respuesta = o.id_respuesta
+            WHERE r.id_auditoria = $1 AND r.inhabilitado_en IS NULL
+            ORDER BY p.orden ASC;
+        `;
+        const { rows } = await pool.query(query, [id_auditoria]);
+        return rows;
+    }
 }
 
 export default Reporte;
