@@ -1,30 +1,32 @@
 import api from "../api/axios.js";
 
 export const loginUsuario = async (username, password) => {
-    try{
-        //mandamos a la ruta de node
-        const respuesta = await api.post('/usuarios/login', { username, password });    
+    try {
 
-        //si el servidor nos da el token
-        if(respuesta.data.token){
-            //guardamos e; token y los datos datos del ususario
+        const respuesta = await api.post('/usuarios/login', {
+            username,
+            password
+        });
+
+        if (respuesta.data.token) {
             sessionStorage.setItem('token', respuesta.data.token);
             sessionStorage.setItem('usuario', JSON.stringify(respuesta.data.data));
         }
+
         return respuesta.data;
-    }catch(error){
+
+    } catch (error) {
+
         console.error("🕵️‍♂️ EL ERROR REAL DE AXIOS ES:", error);
 
-        if(error.response && error.response.data){
+        if (error.response && error.response.data) {
             throw error.response.data;
-        }else{
+        } else {
             throw { mensaje: 'Error de conexion con el servidor' };
         }
     }
 };
-
 export const logoutUsuario = () => {
-    //sacamos el token y los datos del usuario
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('usuario');
 };

@@ -2,8 +2,11 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import pool from './config/db.js';
+
 import usuarioRoutes from './routes/UsuarioRoutes.js';
 import dashboardRoutes from './routes/DashboardRoutes.js';
+import plantillaRoutes from './routes/PlantillaRoutes.js';
+
 import errorHandler from './middlewares/errorHandler.js';
 
 const app = express();
@@ -15,12 +18,14 @@ app.use(express.json());
 //=========Rutas===========
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/plantillas', plantillaRoutes);
 
 app.get('/', (req, res) => {
     res.send('¡Servidor de Robles S.A. en línea y funcionando!');
 });
 
-app.use(errorHandler); // Middleware de manejo de errores
+app.use(errorHandler);
+
 //===================Encendido del Servidor========================
 app.listen(PORT, () => {
     console.log(`Servidor del SAR corriendo en http://localhost:${PORT} 🚀`);

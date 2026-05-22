@@ -1,48 +1,60 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Login from './pages/Login'; 
 import Dashboard from './pages/Dashboard';
 import MainLayout from './components/MainLayout';
 import Usuarios from './pages/Usuarios';
+import Plantillas from './pages/Plantillas';
+import DetallePlantilla from './pages/DetallePlantilla';
+import FormularioPlantilla from './pages/FormularioPlantilla';
+
+
+const RutaProtegida = () => {
+  const token = sessionStorage.getItem("token"); // usa UNO solo (IMPORTANTE)
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Outlet />;
+};
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* si alguien entra a la raiz lo mandamos al login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        
-        {/* ruta del Login */}
-        <Route path="/login" element={<Login />} />
-        
-        {/**/}
-        <Route 
-          path="/dashboard/*" 
-          element={
-            <MainLayout>
-              <Routes>
-                {/* 1. Inicio (El panel con tarjetas de auditorías) */}
-                <Route path="/" element={<Dashboard />} />
-                
-                {/* 2. Plantillas (Próximamente) */}
-                <Route path="plantillas" element={<div>Módulo de Plantillas (Próximamente)</div>} />
-                
-                {/* 3. Auditorías (Próximamente) */}
-                <Route path="auditorias" element={<div>Módulo de Auditorías (Próximamente)</div>} />
-                
-                {/* 4. Usuarios  */}
-                <Route path="usuarios" element={<Usuarios />} />
-                
-                {/* 5. Reportes (Próximamente) */}
-                <Route path="reportes" element={<div>Módulo de Reportes (Próximamente)</div>} />
+  <Routes>
 
-                {/* Si escriben una sub-ruta que no existe, los regresa al Inicio del Dashboard */}
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </MainLayout>
-          } 
-        />
-      </Routes>
-    </BrowserRouter>
+    {/* Ruta raíz */}
+    <Route path="/" element={<Navigate to="/login" replace />} />
+
+    {/* Login */}
+    <Route path="/login" element={<Login />} />
+
+    {/* Rutas protegidas Todas las rutas internas requieren token de sesión activo */}
+    <Route element={<RutaProtegida />}>
+  
+  <Route path="/dashboard" element={<MainLayout />}>
+    
+    <Route index element={<Dashboard />} />
+
+    <Route path="plantillas">
+      <Route index element={<Plantillas />} />
+      <Route path="crear" element={<FormularioPlantilla />} />
+      <Route path=":codigo" element={<DetallePlantilla />} />
+    </Route>
+
+    <Route path="auditorias" element={<div>Módulo Auditorías</div>} />
+    <Route path="usuarios" element={<Usuarios />} />
+    <Route path="reportes" element={<div>Módulo Reportes</div>} />
+
+  </Route>
+
+</Route>
+
+    {/* Ruta inválida */}
+    <Route path="*" element={<Navigate to="/login" replace />} />
+
+  </Routes>
+</BrowserRouter>
   );
 }
 
