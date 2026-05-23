@@ -5,7 +5,6 @@ import pool from './config/db.js';
 
 import usuarioRoutes from './routes/UsuarioRoutes.js';
 import dashboardRoutes from './routes/DashboardRoutes.js';
-import plantillaRoutes from './routes/PlantillaRoutes.js';
 
 import errorHandler from './middlewares/errorHandler.js';
 import plantillaRoutes from './routes/PlantillaRoutes.js';

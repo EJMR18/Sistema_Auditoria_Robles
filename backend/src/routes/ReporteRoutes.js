@@ -12,10 +12,10 @@ const router = Router();
 router.use(verificarToken);
 
 router.get(
-    '/',verificarRol([ROLES.ADMINISTRADOR, ROLES.AUDITOR]),validarSchema(filtroReportesSchema, 'query'),obtenerHistorial
+    '/',verificarRol([ROLES.ADMIN, ROLES.AUDITOR]),validarSchema(filtroReportesSchema, 'query'),obtenerHistorial
 );
-router.get('/:id', verificarRol([ROLES.ADMINISTRADOR, ROLES.AUDITOR]), obtenerDetalle);
+router.get('/:id', verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), obtenerDetalle);
 
-router.post('/:id/enviar', verificarRol([ROLES.ADMINISTRADOR, ROLES.AUDITOR]), validarSchema(enviarCorreoSchema, 'body'), enviarCorreo);
+router.post('/:id/enviar', verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), validarSchema(enviarCorreoSchema, 'body'), enviarCorreo);
 
 export default router;
