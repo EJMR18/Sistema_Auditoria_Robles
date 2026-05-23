@@ -4,6 +4,19 @@ import { ROLES } from '../constant/roles.js';
 import { META_APROBACION_AUDITORIA } from '../constant/auditorias.js';
 
 class AuditoriaServices {
+
+      static async obtenerTodas(usuarioPeticion) {
+        const { id_rol, id_usuario } = usuarioPeticion;
+        
+        let auditorias;
+        if (id_rol === ROLES.AUDITOR) {
+            auditorias = await Auditoria.obtenerPorAuditor(id_usuario);
+        } else {
+            auditorias = await Auditoria.obtenerTodas();
+        }
+        return auditorias;
+    }
+
     static async crearAuditoria(datosAuditoria, creado_por) {
         const { 
             tipo_auditoria, 
@@ -66,8 +79,8 @@ class AuditoriaServices {
         if (auditoria == null) {
             throw new AppError('La auditoría solicitada no fue encontrada.', 404);
         }
-        //solo se permite la cancelacion si la auditoria no ha iniciado
-        if (auditoria.estado !== 'CREADA') {
+        //solo se permite la cancelacion si la auditoria no ha finalizado
+        if (!['CREADA', 'EN_PROCESO'].includes(auditoria.estado)) {
             throw new AppError(`No se puede inhabilitar la auditoría porque ya se encuentra en estado '${auditoria.estado}'.`, 400);
         }
         //ejecucion del borrado logico en la BD
@@ -87,7 +100,7 @@ class AuditoriaServices {
             throw new AppError('No se ha podido actualizar la auditoría.', 404);
         }
         //validacion de Estado
-        if (auditoria.estado !== 'CREADA') {
+        if (!['CREADA', 'EN_PROCESO'].includes(auditoria.estado)) {
             throw new AppError(`No se puede modificar la auditoría porque ya se encuentra en estado '${auditoria.estado}'.`, 400);
         }
         const plantillaCambio = Number(auditoria.id_plantilla) !== id_plantilla;
@@ -124,9 +137,6 @@ class AuditoriaServices {
         if (auditoria.estado !== 'CREADA') {
             throw new AppError(`La auditoría no puede iniciarse porque se encuentra en estado '${auditoria.estado}'.`, 400);
         }
-        if (Number(auditoria.id_auditor) !== Number(id_usuario_peticion)) {
-            throw new AppError('Solo el auditor asignado puede iniciar esta auditoría.', 403);
-        }
         //ejecutar update
         const auditoriaIniciada = await Auditoria.iniciarAuditoria(id_auditoria);
         //validacion contra Condiciones de Carrera
@@ -135,6 +145,27 @@ class AuditoriaServices {
         }
         return auditoriaIniciada;
     }
+    
+    // revertir a CREADA (Quitar el check)
+    static async deshabilitarAuditoriaRevertir(id_auditoria) {
+        const auditoria = await Auditoria.buscarPorId(id_auditoria);
+        if (auditoria === null) {
+            throw new AppError('La auditoría solicitada no existe o ha sido inhabilitada.', 404);
+        }
+        if (auditoria.estado !== 'EN_PROCESO') {
+            throw new AppError(`La auditoría no puede deshabilitarse porque se encuentra en estado '${auditoria.estado}'.`, 400);
+        }
+        
+        // Verificar si ya tiene respuestas, si tiene respuestas no se debería poder quitar el check tan fácil,
+        // pero dado que el requerimiento es solo hacer lo contrario, lo permitimos o validamos si hay respuestas.
+        // Haremos el update:
+        const auditoriaDeshabilitada = await Auditoria.deshabilitarAuditoria(id_auditoria);
+        if (auditoriaDeshabilitada == null) {
+            throw new AppError('No se pudo revertir la auditoría.', 409);
+        }
+        return auditoriaDeshabilitada;
+    }
+
     //registrar Respuesta
     static async registrarRespuesta(id_auditoria, datosRespuesta, id_usuario_peticion) {
         //validar que la auditoria exista
@@ -237,5 +268,7 @@ class AuditoriaServices {
             }
         };
     }
+
+
 }
 export default AuditoriaServices;

@@ -11,6 +11,7 @@ import plantillaRoutes from './routes/PlantillaRoutes.js';
 import auditoriaRoutes from './routes/AuditoriaRoutes.js';
 import reporteRoutes from './routes/ReporteRoutes.js';
 import empleadoRoutes from './routes/EmpleadoRoutes.js';
+import estructuraRoutes from './routes/EstructuraRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,11 +22,11 @@ app.use(express.json());
 //=========Rutas===========
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/plantilla', plantillaRoutes);
+app.use('/api/plantillas', plantillaRoutes);
 app.use('/api/auditoria', auditoriaRoutes);
 app.use('/api/reporte', reporteRoutes);
 app.use('/api/empleado', empleadoRoutes);
-
+app.use('/api/estructura', estructuraRoutes);
 app.get('/', (req, res) => {
     res.send('¡Servidor de Robles S.A. en línea y funcionando!');
 });
@@ -34,5 +35,5 @@ app.use(errorHandler);
 
 //===================Encendido del Servidor========================
 app.listen(PORT, () => {
-    console.log(`Servidor del SAR corriendo en http://localhost:${PORT} 🚀`);
+    console.log(`Servidor del SAR corriendo en http://localhost:${PORT}`);
 });

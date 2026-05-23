@@ -6,13 +6,13 @@ import { enviarReporteCorreo } from '../utils/correoService.js';
 
 class ReporteServices {
     static async consultarHistorial(filtrosInput, usuarioPeticion) {
-        const { rol, id_usuario } = usuarioPeticion;
+        const { id_rol, id_usuario } = usuarioPeticion;
 
-        if (rol !== ROLES.ADMINISTRADOR && rol !== ROLES.AUDITOR) {
+        if (id_rol !== ROLES.ADMIN && id_rol !== ROLES.AUDITOR) {
             throw new AppError('No posee permisos para consultar reportes.', 403);
         }
         const filtrosFinales = { ...filtrosInput };
-        if (rol === ROLES.AUDITOR) {
+        if (id_rol === ROLES.AUDITOR) {
             filtrosFinales.id_auditor = id_usuario;
         }
 
@@ -58,10 +58,10 @@ class ReporteServices {
     }
 
     static async obtenerDetalle(id_auditoria, usuarioPeticion) {
-        const { rol, id_usuario } = usuarioPeticion;
+        const { id_rol, id_usuario } = usuarioPeticion;
 
         // 1. Validación de rol global
-        if (rol !== ROLES.ADMINISTRADOR && rol !== ROLES.AUDITOR) {
+        if (id_rol !== ROLES.ADMIN && id_rol !== ROLES.AUDITOR) {
             throw new AppError('No posee permisos para consultar reportes.', 403);
         }
 
@@ -78,7 +78,7 @@ class ReporteServices {
         }
 
         // 4. Candado de seguridad (Blindado contra diferencias de tipos de PostgreSQL)
-        if (rol === ROLES.AUDITOR && Number(cabecera.id_auditor) !== Number(id_usuario)) {
+        if (id_rol === ROLES.AUDITOR && Number(cabecera.id_auditor) !== Number(id_usuario)) {
             throw new AppError('No posee permisos para ver este reporte específico.', 403);
         }
 
@@ -132,20 +132,15 @@ class ReporteServices {
         
         const detalle = await this.obtenerDetalle(id_auditoria, usuarioPeticion);
 
-        try {
-            await enviarReporteCorreo(correoDestino, detalle);
-        } catch (error) {
-            console.error(
-                "Fallo interno de Nodemailer/Gmail:",
-                error.message
-            );
-            throw new AppError(
-                'No se pudo enviar el correo electrónico. Por favor, intente más tarde.',
-                500
-            );
-        }
+        // Se envía el correo en segundo plano para no bloquear la respuesta HTTP
+        // y que el usuario reciba la confirmación en el menor tiempo posible.
+
+        enviarReporteCorreo(correoDestino, detalle).catch((error) => {
+            console.error("Fallo interno de Nodemailer/Gmail enviando en segundo plano:", error.message);
+        });
+
         return {
-            mensaje: 'Correo enviado correctamente'
+            mensaje: 'El correo se está enviando en segundo plano. Llegará pronto al destinatario.'
         };
     }
 }

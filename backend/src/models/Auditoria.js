@@ -102,6 +102,28 @@ class Auditoria {
         return rows[0] ?? null;
     }
 
+    static async obtenerPorAuditor(id_auditor) {
+        const query = `
+            SELECT 
+                id_auditoria, 
+                uuid_auditoria,
+                codigo_auditoria, 
+                estado, 
+                tipo_auditoria,
+                id_plantilla,
+                id_auditor, 
+                fecha_inicio, 
+                fecha_fin,
+                creado_en
+            FROM sar_auditorias 
+            WHERE inhabilitado_en IS NULL
+            AND id_auditor = $1
+            ORDER BY creado_en DESC;
+        `;
+        const { rows } = await pool.query(query, [id_auditor]);
+        return rows;
+    }
+
     static async obtenerTodas() {
         const query = `
             SELECT 
@@ -184,6 +206,27 @@ class Auditoria {
             WHERE 
                 id_auditoria = $1
                 AND estado = 'CREADA'
+                AND inhabilitado_en IS NULL
+            RETURNING 
+                id_auditoria, 
+                codigo_auditoria, 
+                estado, 
+                fecha_inicio,
+                id_auditor;
+        `;
+        const { rows } = await pool.query(query, [id_auditoria]);
+        return rows[0] ?? null;
+    }
+    //deshabilitar o revertir una auditoria a CREADA
+    static async deshabilitarAuditoria(id_auditoria) {
+        const query = `
+            UPDATE sar_auditorias
+            SET 
+                estado = 'CREADA',
+                fecha_inicio = NULL
+            WHERE 
+                id_auditoria = $1
+                AND estado = 'EN_PROCESO'
                 AND inhabilitado_en IS NULL
             RETURNING 
                 id_auditoria, 

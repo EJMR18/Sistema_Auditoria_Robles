@@ -64,6 +64,7 @@ class Plantilla {
    static async obtenerTodas() {
         const query = `
             SELECT 
+                id_plantilla,
                 codigo_plantilla, 
                 nombre_plantilla, 
                 descripcion, 

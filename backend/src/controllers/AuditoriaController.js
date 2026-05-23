@@ -2,7 +2,8 @@ import AuditoriaServices from '../services/AuditoriaService.js';
 
 export const obtenerAuditorias = async (req, res, next) => {
     try {
-        const auditorias = await AuditoriaServices.obtenerTodas();
+        const usuarioPeticion = req.usuario;
+        const auditorias = await AuditoriaServices.obtenerTodas(usuarioPeticion);
         res.status(200).json({
             estado: 'exito',
             datos: auditorias
@@ -73,6 +74,20 @@ export const iniciarAuditoria = async (req, res, next) => {
             estado: 'exito',
             mensaje: 'Auditoría iniciada correctamente. El tiempo de ejecución ha comenzado.',
             datos: auditoriaIniciada
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deshabilitarAuditoriaRevertir = async (req, res, next) => {
+    try {
+        const { id } = req.params; 
+        const auditoriaRevertida = await AuditoriaServices.deshabilitarAuditoriaRevertir(id);
+        res.status(200).json({
+            estado: 'exito',
+            mensaje: 'Auditoría deshabilitada (revertida a CREADA) correctamente.',
+            datos: auditoriaRevertida
         });
     } catch (error) {
         next(error);
