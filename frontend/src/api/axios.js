@@ -1,19 +1,30 @@
 import axios from 'axios';
 
 const api = axios.create({
-    //punto de partda para las rutas de la api
-  baseURL: '/api'
+  baseURL: 'http://localhost:3000/api'
 });
 
-api.interceptors.request.use(config => {
-  const token = sessionStorage.getItem('token');  
-  //si encuentra el token se agrega a la cabecera
-    if (token) {    
-        config.headers['Authorization'] = `Bearer ${token}`;
-    }
+api.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem('token');
+
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   return config;
-}, (error) => {
-  return Promise.reject(error);
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      sessionStorage.removeItem('token');
+      window.location.replace('/login');
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default api;

@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios"; 
+import { CheckCircle2 } from 'lucide-react';
+import { Play } from 'lucide-react';
+import { XCircle } from 'lucide-react';
 
 const Dashboard = () => {
   // Dejamos el estado vacío para que refleje la base de datos actual
@@ -7,22 +10,33 @@ const Dashboard = () => {
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    const obtenerDatos = async () => {
-      try {
-        //  endpoint real de Node.js
-        const res = await api.get('/auditorias'); 
-        if (res.data && res.data.exito) {
-          setAuditorias(res.data.data);
-        }
-      } catch (err) {
-        console.error("Error al conectar con SAR Robles:", err);
-      } finally {
-        setCargando(false);
-      }
-    };
-    obtenerDatos();
-  }, []);
+  const obtenerDatos = async () => {
+    try {
 
+      setCargando(true);
+
+      const res = await api.get('/dashboard/principal');
+
+      if (res.data?.exito) {
+        setAuditorias(res.data.datos || []);
+      }
+
+    } catch (err) {
+
+      console.error(
+        "Error al conectar con SAR Robles:",
+        err.response?.data || err.message
+      );
+
+      setAuditorias([]);
+
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  obtenerDatos();
+}, []);
   // Los contadores marcarán 0 automáticamente si el arreglo está vacío
   const activas = auditorias.filter(a => a.estado === 'EN_PROCESO').length;
   const completas = auditorias.filter(a => a.estado === 'FINALIZADA').length;
@@ -40,13 +54,13 @@ const Dashboard = () => {
       {/* SECCIÓN DE TARJETAS */}
       <div style={styles.gridCards}>
         <div style={{...styles.card, borderTop: '5px solid #3498db'}}>
-          <div style={{fontSize: '2rem'}}>▶️</div>
+          <Play size={32} style={{ color: '#3b82f6' }} />
           <h3 style={styles.cardValue}>{activas}</h3>
           <p style={styles.cardLabel}>Auditorías Activas</p>
         </div>
 
         <div style={{...styles.card, borderTop: '5px solid #2ecc71'}}>
-          <div style={{fontSize: '2rem'}}>✅</div>
+          <CheckCircle2 size={32} style={{ color: '#22c55e' }} />
           <h3 style={styles.cardValue}>{completas}</h3>
           <p style={styles.cardLabel}>Auditorías Completas</p>
         </div>
@@ -54,7 +68,7 @@ const Dashboard = () => {
         <div style={styles.columnaAccion}>
           <button style={styles.btnNuevo}>+ Nueva Auditoría</button>
           <div style={{...styles.card, borderTop: '5px solid #e74c3c', width: '100%'}}>
-            <div style={{fontSize: '2rem'}}>🚫</div>
+            <XCircle size={32} style={{ color: '#ef4444' }} />
             <h3 style={styles.cardValue}>{abortadas}</h3>
             <p style={styles.cardLabel}>Auditorías Abortadas</p>
           </div>

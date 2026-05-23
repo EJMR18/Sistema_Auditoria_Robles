@@ -1,6 +1,7 @@
+import { Outlet } from 'react-router-dom'; // 1. IMPORTAMOS EL OUTLET
 import Sidebar from './Sidebar';
 
-const MainLayout = ({ children }) => {
+const MainLayout = () => { // Quitamos el { children } de aquí
   return (
     <div style={styles.container}>
       {/* 1. LLAMAMOS AL SIDEBAR */}
@@ -8,7 +9,7 @@ const MainLayout = ({ children }) => {
 
       {/* 2. ÁREA DE CONTENIDO DINÁMICO */}
       <main style={styles.mainContent}>
-        {children}
+        <Outlet /> {/* 2. CAMBIAMOS {children} POR <Outlet /> */}
       </main>
     </div>
   );
@@ -16,13 +17,13 @@ const MainLayout = ({ children }) => {
 
 const styles = {
   container: {
-    display: 'flex', // Esto pone el Sidebar y el Main uno al lado del otro
+    display: 'flex', 
     minHeight: '100vh',
-    backgroundColor: '#f4f7f6' // Un gris muy claro para que resalte el blanco de las tablas
+    backgroundColor: '#f4f7f6' 
   },
   mainContent: {
-    flex: 1, // Esto le dice al contenido que ocupe todo el espacio sobrante
-    marginLeft: '260px', // IMPORTANTE: Debe ser el mismo ancho que el Sidebar para que no se traslapen
+    flex: 1, 
+    marginLeft: '260px', 
     padding: '30px',
     transition: 'margin-left 0.3s ease'
   }
