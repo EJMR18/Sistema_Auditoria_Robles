@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { crearAuditoria, inhabilitarAuditoria, actualizarAuditoria, iniciarAuditoria, registrarRespuesta, finalizarAuditoria } from '../controllers/auditoriaController.js';
+import { crearAuditoria, obtenerAuditorias, inhabilitarAuditoria, actualizarAuditoria, iniciarAuditoria, registrarRespuesta, finalizarAuditoria } from '../controllers/AuditoriaController.js';
 import { crearAuditoriaSchema, idAuditoriaSchema, actualizarAuditoriaSchema, registrarRespuestaSchema } from '../schemas/auditoriaSchema.js';
 import { validarSchema } from '../middlewares/validarSchema.js';
 import { verificarRol } from '../middlewares/verificarRol.js';
@@ -9,6 +9,8 @@ import { ROLES } from '../constant/roles.js';
 const router = Router();
 //todas las rutas de abajo requieren autenticacion
 router.use(verificarToken);
+
+router.get('/', verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), obtenerAuditorias);
 
 router.post(
     '/',verificarRol([ROLES.ADMIN, ROLES.AUDITOR]), validarSchema(crearAuditoriaSchema), crearAuditoria      

@@ -1,10 +1,11 @@
 import nodemailer from 'nodemailer';
 
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error(
-        'EMAIL_USER o EMAIL_PASS no configurados'
-    );
-}
+// Comentado temporalmente para desarrollo local sin credenciales de correo
+// if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+//     throw new Error(
+//         'EMAIL_USER o EMAIL_PASS no configurados'
+//     );
+// }
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',

@@ -28,6 +28,11 @@ const Plantillas = () => {
   // Errores específicos del formulario
   const [errorFormulario, setErrorFormulario] = useState('');
 
+  // Usuario activo para validar roles
+  const usuarioData = sessionStorage.getItem('usuario');
+  const usuarioActivo = usuarioData ? JSON.parse(usuarioData) : null;
+  const esAdmin = usuarioActivo?.id_rol === 1;
+
   // 1. Cargar las plantillas reales al montar el componente
   const cargarPlantillas = async () => {
     try {
@@ -157,9 +162,11 @@ const plantillasFiltradas = (plantillas || []).filter(p =>
             style={styles.inputBuscar}
           />
         </div>
-        <button onClick={() => navigate('/dashboard/plantillas/crear')} style={styles.btnCrear}>
-          <Plus size={18} style={{ marginRight: '5px' }} /> CREAR NUEVA PLANTILLA
-        </button>
+        {esAdmin && (
+          <button onClick={() => navigate('/dashboard/plantillas/crear')} style={styles.btnCrear}>
+            <Plus size={18} style={{ marginRight: '5px' }} /> CREAR NUEVA PLANTILLA
+          </button>
+        )}
       </div>
 
       {/* TABLA DE GESTIÓN */}
@@ -208,13 +215,15 @@ const plantillasFiltradas = (plantillas || []).filter(p =>
                         <Eye size={16} color="#0056b3" />
                       </button>
                       
-                      <button 
-                        style={styles.actionBtn} 
-                        title="Inhabilitar"
-                        onClick={() => handleInhabilitar(plantilla.codigo_plantilla, plantilla.nombre_plantilla)}
-                      >
-                        <Trash2 size={16} color="#ef4444" />
-                      </button>
+                      {esAdmin && (
+                        <button 
+                          style={styles.actionBtn} 
+                          title="Inhabilitar"
+                          onClick={() => handleInhabilitar(plantilla.codigo_plantilla, plantilla.nombre_plantilla)}
+                        >
+                          <Trash2 size={16} color="#ef4444" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

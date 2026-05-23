@@ -13,6 +13,12 @@ import Plantillas from './pages/Plantillas';
 import DetallePlantilla from './pages/DetallePlantilla';
 import FormularioPlantilla from './pages/FormularioPlantilla';
 
+// --- Importaciones Auditorias ---
+import Auditorias from './pages/Auditorias';
+
+// --- Importaciones Empleados ---
+import Empleados from './pages/Empleados';
+
 // --- Filtro de Seguridad ---
 const RutaProtegida = () => {
   const token = sessionStorage.getItem("token"); // usa UNO solo (IMPORTANTE)
@@ -49,8 +55,10 @@ function App() {
               <Route path=":codigo" element={<DetallePlantilla />} />
             </Route>
 
-            <Route path="auditorias" element={<div>Módulo Auditorías</div>} />
+            <Route path="auditorias" element={<Auditorias />} />
             <Route path="usuarios" element={<Usuarios />} />
+            
+            <Route path="empleados" element={<Empleados />} />
             
             {/* Módulo de Reportes (Tuyo) */}
             <Route path="reportes">
