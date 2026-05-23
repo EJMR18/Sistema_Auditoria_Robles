@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { logoutUsuario } from '../services/authServices';
+import { Home, FileText, ClipboardList, Users, BarChart3 } from 'lucide-react';
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -23,11 +24,41 @@ const Sidebar = () => {
         </div>
         
         <nav style={styles.nav}>
-          <Link to="/dashboard" style={styles.link}>🏠 Inicio</Link>
-          <Link to="/dashboard/plantillas" style={styles.link}>📄 Plantillas</Link>
-          <Link to="/dashboard/auditorias" style={styles.link}>📋 Auditorías</Link>
-          <Link to="/dashboard/usuarios" style={styles.link}>👥 Usuarios</Link>
-          <Link to="/dashboard/reportes" style={styles.link}>📊 Reportes</Link>
+          {/* Cambia tu bloque de enlaces por este: */}
+<Link to="/dashboard" style={styles.link}>
+  <div style={styles.iconContainer}>
+    <Home size={20} />
+    <span>Inicio</span>
+  </div>
+</Link>
+
+<Link to="/dashboard/plantillas" style={styles.link}>
+  <div style={styles.iconContainer}>
+    <FileText size={20} />
+    <span>Plantillas</span>
+  </div>
+</Link>
+
+<Link to="/dashboard/auditorias" style={styles.link}>
+  <div style={styles.iconContainer}>
+    <ClipboardList size={20} />
+    <span>Auditorías</span>
+  </div>
+</Link>
+
+<Link to="/dashboard/usuarios" style={styles.link}>
+  <div style={styles.iconContainer}>
+    <Users size={20} />
+    <span>Usuarios</span>
+  </div>
+</Link>
+
+<Link to="/dashboard/reportes" style={styles.link}>
+  <div style={styles.iconContainer}>
+    <BarChart3 size={20} />
+    <span>Reportes</span>
+  </div>
+</Link>
         </nav>
       </div>
 

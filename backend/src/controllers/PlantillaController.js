@@ -2,12 +2,16 @@ import PlantillaServices from '../services/PlantillaService.js';
 
 export const crearPlantilla = async (req, res, next) => {
     try {
-        const idCreador = req.usuario.id_usuario; 
-        const resultado = await PlantillaServices.crearPlantillaNueva(req.body, idCreador);
+        const idCreador = req.usuario.id_usuario;
+        const resultadoService = await PlantillaServices.crearPlantillaNueva(
+            req.body,
+            idCreador
+        );
+
         res.status(201).json({
             estado: 'exito',
             mensaje: 'La plantilla y sus preguntas han sido registradas correctamente.',
-            datos: resultado
+            datos: resultadoService
         });
     } catch (error) {
         next(error);
