@@ -46,19 +46,24 @@ const Sidebar = () => {
   </div>
 </Link>
 
-<Link to="/dashboard/usuarios" style={styles.link}>
-  <div style={styles.iconContainer}>
-    <Users size={20} />
-    <span>Usuarios</span>
-  </div>
-</Link>
+{/* Mostrar Usuarios y Empleados SOLO si el usuario es Administrador (id_rol === 1) */}
+{usuarioActivo?.id_rol === 1 && (
+  <>
+    <Link to="/dashboard/usuarios" style={styles.link}>
+      <div style={styles.iconContainer}>
+        <Users size={20} />
+        <span>Usuarios</span>
+      </div>
+    </Link>
 
-<Link to="/dashboard/empleados" style={styles.link}>
-  <div style={styles.iconContainer}>
-    <Briefcase size={20} />
-    <span>Empleados</span>
-  </div>
-</Link>
+    <Link to="/dashboard/empleados" style={styles.link}>
+      <div style={styles.iconContainer}>
+        <Briefcase size={20} />
+        <span>Empleados</span>
+      </div>
+    </Link>
+  </>
+)}
 
 <Link to="/dashboard/reportes" style={styles.link}>
   <div style={styles.iconContainer}>
