@@ -1,10 +1,10 @@
-export const validarSchema = (schema) => (req, res, next) => {
-    const resultado = schema.safeParse(req.body);
+export const validarSchema = (schema, propiedad = 'body') => (req, res, next) => {
+    const resultado = schema.safeParse(req[propiedad]);
 
     if (!resultado.success) {
         const listaErrores = resultado.error?.issues || resultado.error?.errors || [];
         const erroresFormateados = listaErrores.map(err => ({
-            campo: err.path[0], 
+            campo: err.path.join('.'), 
             mensaje: err.message
         }));
 
@@ -15,6 +15,11 @@ export const validarSchema = (schema) => (req, res, next) => {
         });
     }
 
-    req.body = resultado.data;
+    Object.defineProperty(req, propiedad, {
+        value: resultado.data,
+        writable: true,
+        enumerable: true,
+        configurable: true
+    });
     next();
 };

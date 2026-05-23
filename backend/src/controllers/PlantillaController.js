@@ -1,12 +1,8 @@
 import PlantillaServices from '../services/PlantillaService.js';
-//import { crearPlantillaSchema } from "../schemas/plantillaSchema.js";
 
 export const crearPlantilla = async (req, res, next) => {
     try {
         const idCreador = req.usuario.id_usuario;
-
-        // Como tu middleware 'validarSchema' ya filtró todo en las rutas,
-        // aquí req.body ya viene 100% limpio y seguro.
         const resultadoService = await PlantillaServices.crearPlantillaNueva(
             req.body,
             idCreador
@@ -17,7 +13,6 @@ export const crearPlantilla = async (req, res, next) => {
             mensaje: 'La plantilla y sus preguntas han sido registradas correctamente.',
             datos: resultadoService
         });
-
     } catch (error) {
         next(error);
     }
