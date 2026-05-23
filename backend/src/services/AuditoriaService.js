@@ -79,8 +79,8 @@ class AuditoriaServices {
         if (auditoria == null) {
             throw new AppError('La auditoría solicitada no fue encontrada.', 404);
         }
-        //solo se permite la cancelacion si la auditoria no ha finalizado
-        if (!['CREADA', 'EN_PROCESO'].includes(auditoria.estado)) {
+        //solo se permite la cancelacion si la auditoria está en estado CREADA
+        if (auditoria.estado !== 'CREADA') {
             throw new AppError(`No se puede inhabilitar la auditoría porque ya se encuentra en estado '${auditoria.estado}'.`, 400);
         }
         //ejecucion del borrado logico en la BD
