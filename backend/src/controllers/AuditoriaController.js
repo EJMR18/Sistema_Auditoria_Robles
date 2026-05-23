@@ -1,5 +1,17 @@
 import AuditoriaServices from '../services/AuditoriaService.js'; 
 
+export const obtenerAuditorias = async (req, res, next) => {
+    try {
+        const auditorias = await AuditoriaServices.obtenerTodas();
+        res.status(200).json({
+            estado: 'exito',
+            datos: auditorias
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const crearAuditoria = async (req, res, next) => {
     try {
         const datosAuditoria = req.body; 

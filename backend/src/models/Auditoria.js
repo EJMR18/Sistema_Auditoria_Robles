@@ -101,6 +101,27 @@ class Auditoria {
         const { rows } = await pool.query(query, [id_auditoria]);
         return rows[0] ?? null;
     }
+
+    static async obtenerTodas() {
+        const query = `
+            SELECT 
+                id_auditoria, 
+                uuid_auditoria,
+                codigo_auditoria, 
+                estado, 
+                tipo_auditoria,
+                id_plantilla,
+                id_auditor, 
+                fecha_inicio, 
+                fecha_fin,
+                creado_en
+            FROM sar_auditorias 
+            WHERE inhabilitado_en IS NULL
+            ORDER BY creado_en DESC;
+        `;
+        const { rows } = await pool.query(query);
+        return rows;
+    }
     //inhabilitar una auditoria
     static async inhabilitar(id_auditoria, inhabilitado_por) {
         const query = `
