@@ -1,25 +1,14 @@
 import PlantillaServices from '../services/PlantillaService.js';
-import { crearPlantillaSchema } from "../schemas/plantillaSchema.js";
+//import { crearPlantillaSchema } from "../schemas/plantillaSchema.js";
 
 export const crearPlantilla = async (req, res, next) => {
     try {
         const idCreador = req.usuario.id_usuario;
 
-        // 🔥 VALIDACIÓN ZOD AQUÍ
-        const resultado = crearPlantillaSchema.safeParse(req.body);
-
-        if (!resultado.success) {
-            return res.status(400).json({
-                estado: "error",
-                mensaje: resultado.error.errors[0].message,
-                errores: resultado.error.errors
-            });
-        }
-
-        const datosValidados = resultado.data;
-
+        // Como tu middleware 'validarSchema' ya filtró todo en las rutas,
+        // aquí req.body ya viene 100% limpio y seguro.
         const resultadoService = await PlantillaServices.crearPlantillaNueva(
-            datosValidados,
+            req.body,
             idCreador
         );
 
