@@ -36,3 +36,19 @@ export const obtenerDetalle = async (req, res, next) => {
         next(error);
     }
 };
+
+export const enviarCorreo = async (req, res, next) => {
+    try {
+        const { id } = req.params; 
+        const { correoDestino } = req.body; 
+        const usuarioPeticion = req.usuario; 
+        const resultado = await ReporteServices.enviarPorCorreo(id, correoDestino, usuarioPeticion);
+
+        res.status(200).json({
+            estado: 'exito',
+            mensaje: resultado.mensaje
+        });
+    } catch (error) {
+        next(error); 
+    }
+};

@@ -58,3 +58,9 @@ export const filtroReportesSchema = z.object({
         path: ['fecha_fin']
     }
 );
+
+export const enviarCorreoSchema = z.object({
+    correoDestino: z.string()
+        .trim()
+        .email({ message: 'Debe proporcionar un correo electrónico válido' })
+});
