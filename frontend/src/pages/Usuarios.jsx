@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios";
 import { usuarioService } from "../services/usuarioService";
+import { empleadoService } from "../services/empleadoService";
 
 const Usuarios= () => { 
   const [usuarios, setUsuarios] = useState([]);
+  const [empleados, setEmpleados] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   // Estados para modales
@@ -27,6 +29,9 @@ const Usuarios= () => {
     estado_activo: true
   });
 
+  const [busquedaEmpleado, setBusquedaEmpleado] = useState('');
+  const [mostrarListaEmpleados, setMostrarListaEmpleados] = useState(false);
+
   const obtenerDatos = async () => {
     try {
       setCargando(true);
@@ -34,6 +39,9 @@ const Usuarios= () => {
       if (res.data && res.data.exito) {
         setUsuarios(res.data.data);
       }
+      
+      const empData = await empleadoService.obtenerEmpleados();
+      setEmpleados(empData || []);
     } catch (err) {
       console.error("Error al conectar con el servidor de Robles:", err);
     } finally {
@@ -61,6 +69,7 @@ const Usuarios= () => {
       await usuarioService.registrarUsuario(payload);
       setMostrarModalCrear(false);
       setNuevoUsuario({ username: '', password: '', id_rol: 2, id_empleado: '' });
+      setBusquedaEmpleado('');
       obtenerDatos();
     } catch (error) {
       setErrorGlobal(error.response?.data?.mensaje || 'Error al crear el usuario');
@@ -213,17 +222,62 @@ const Usuarios= () => {
                   <option value={2}>Auditor</option>
                 </select>
               </div>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', color: '#0a1f33', fontWeight: '500', fontSize: '0.9rem' }}>ID Empleado Asignado (Opcional):</label>
+              <div style={{ marginBottom: '20px', position: 'relative' }}>
+                <label style={{ display: 'block', marginBottom: '5px', color: '#0a1f33', fontWeight: '500', fontSize: '0.9rem' }}>Empleado Asignado (Opcional):</label>
                 <input 
-                  type="number" 
-                  value={nuevoUsuario.id_empleado} 
-                  onChange={(e) => setNuevoUsuario({...nuevoUsuario, id_empleado: e.target.value})} 
-                  style={styles.input} 
+                  type="text" 
+                  value={busquedaEmpleado}
+                  onChange={(e) => {
+                    setBusquedaEmpleado(e.target.value);
+                    setNuevoUsuario({...nuevoUsuario, id_empleado: ''});
+                    setMostrarListaEmpleados(true);
+                  }}
+                  onFocus={() => setMostrarListaEmpleados(true)}
+                  style={styles.input}
+                  placeholder="Buscar empleado..."
                 />
+                {mostrarListaEmpleados && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'white',
+                    border: '1px solid #ccc',
+                    maxHeight: '150px',
+                    overflowY: 'auto',
+                    zIndex: 10,
+                    borderRadius: '4px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  }}>
+                    {empleados
+                      .filter(emp => emp.nombre_completo.toLowerCase().includes(busquedaEmpleado.toLowerCase()) || String(emp.id_empleado).includes(busquedaEmpleado))
+                      .map(emp => (
+                        <div 
+                          key={emp.id_empleado}
+                          style={{ padding: '8px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                          onClick={() => {
+                            setNuevoUsuario({...nuevoUsuario, id_empleado: emp.id_empleado});
+                            setBusquedaEmpleado(emp.nombre_completo);
+                            setMostrarListaEmpleados(false);
+                          }}
+                        >
+                          {emp.id_empleado} - {emp.nombre_completo}
+                        </div>
+                    ))}
+                    {empleados.filter(emp => emp.nombre_completo.toLowerCase().includes(busquedaEmpleado.toLowerCase()) || String(emp.id_empleado).includes(busquedaEmpleado)).length === 0 && (
+                      <div style={{ padding: '8px', color: '#888' }}>No se encontraron coincidencias</div>
+                    )}
+                  </div>
+                )}
+                {nuevoUsuario.id_empleado && (
+                  <div style={{ fontSize: '0.8rem', color: '#166534', marginTop: '5px' }}>
+                    Seleccionado: ID {nuevoUsuario.id_empleado}
+                  </div>
+                )}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                <button type="button" onClick={() => setMostrarModalCrear(false)} style={styles.btnCancelar}>Cancelar</button>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => { setMostrarModalCrear(false); setBusquedaEmpleado(''); setMostrarListaEmpleados(false); }} style={styles.btnCancelar}>Cancelar</button>
                 <button type="submit" disabled={procesando} style={styles.btnGuardar}>{procesando ? 'Guardando...' : 'Guardar Usuario'}</button>
               </div>
             </form>
@@ -258,7 +312,7 @@ const Usuarios= () => {
                   Cuenta Activa en el Sistema
                 </label>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                 <button type="button" onClick={() => setMostrarModalEditar(false)} style={styles.btnCancelar}>Cancelar</button>
                 <button type="submit" disabled={procesando} style={styles.btnGuardar}>{procesando ? 'Actualizando...' : 'Actualizar Usuario'}</button>
               </div>

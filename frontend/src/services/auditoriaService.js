@@ -23,12 +23,17 @@ export const auditoriaService = {
     const response = await api.patch(`/auditoria/${id}/iniciar`);
     return response.data;
   },
-  
+
+  deshabilitarAuditoriaRevertir: async (id) => {
+    const response = await api.patch(`/auditoria/${id}/deshabilitar`);
+    return response.data;
+  },
+
   registrarRespuesta: async (id, datos) => {
     const response = await api.post(`/auditoria/${id}/respuestas`, datos);
     return response.data;
   },
-  
+
   finalizarAuditoria: async (id) => {
     const response = await api.patch(`/auditoria/${id}/finalizar`);
     return response.data;

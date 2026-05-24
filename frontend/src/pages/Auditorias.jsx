@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auditoriaService } from '../services/auditoriaService';
-import { ClipboardList, Plus, Search, Trash2, Eye, Play, CheckCircle } from 'lucide-react';
+import { ClipboardList, Plus, Search, Trash2, Eye, Check, CheckCircle, XCircle } from 'lucide-react';
 
 const Auditorias = () => {
   const navigate = useNavigate();
@@ -44,12 +44,23 @@ const Auditorias = () => {
   };
 
   const handleIniciar = async (id, codigo) => {
-    if (window.confirm(`¿Estás seguro de que deseas iniciar la ejecución de la auditoría "${codigo}"?`)) {
+    if (window.confirm(`¿Estás seguro de que deseas habilitar y poner en proceso la auditoría "${codigo}"?`)) {
       try {
         await auditoriaService.iniciarAuditoria(id);
         cargarAuditorias();
       } catch (err) {
-        alert(err.mensaje || 'No se pudo iniciar la auditoría.');
+        alert(err.mensaje || 'No se pudo habilitar la auditoría.');
+      }
+    }
+  };
+
+  const handleDeshabilitar = async (id, codigo) => {
+    if (window.confirm(`¿Estás seguro de que deseas quitar el check (revertir a Creada) a la auditoría "${codigo}"?`)) {
+      try {
+        await auditoriaService.deshabilitarAuditoriaRevertir(id);
+        cargarAuditorias();
+      } catch (err) {
+        alert(err.mensaje || 'No se pudo deshabilitar la auditoría.');
       }
     }
   };
@@ -121,10 +132,12 @@ const Auditorias = () => {
           />
         </div>
         
-        {/* Solo el admin o auditor que tenga permiso debería planificar (según las reglas anteriores, ambos pueden) */}
-        <button onClick={() => navigate('/dashboard/auditorias/crear')} style={styles.btnCrear}>
-          <Plus size={18} style={{ marginRight: '5px' }} /> PLANIFICAR AUDITORÍA
-        </button>
+        {/* Solo el admin debería poder planificar una auditoría */}
+        {esAdmin && (
+          <button onClick={() => navigate('/dashboard/auditorias/crear')} style={styles.btnCrear}>
+            <Plus size={18} style={{ marginRight: '5px' }} /> PLANIFICAR AUDITORÍA
+          </button>
+        )}
       </div>
 
       {/* TABLA DE GESTIÓN */}
@@ -163,9 +176,15 @@ const Auditorias = () => {
                     <td style={styles.tdAcciones}>
                       
                       {/* ACCIONES DEL AUDITOR/ADMIN DEPENDIENDO DEL ESTADO */}
-                      {a.estado === 'CREADA' && !esAdmin && (
-                         <button style={styles.actionBtnPrimary} onClick={() => handleIniciar(a.id_auditoria, a.codigo_auditoria)} title="Iniciar">
-                           <Play size={16} />
+                      {a.estado === 'CREADA' && (
+                         <button style={styles.actionBtnPrimary} onClick={() => handleIniciar(a.id_auditoria, a.codigo_auditoria)} title="Habilitar Auditoría">
+                           <Check size={16} />
+                         </button>
+                      )}
+                      
+                      {a.estado === 'EN_PROCESO' && (
+                         <button style={styles.actionBtnWarning} onClick={() => handleDeshabilitar(a.id_auditoria, a.codigo_auditoria)} title="Deshabilitar Auditoría (Revertir)">
+                           <XCircle size={16} />
                          </button>
                       )}
                       
@@ -181,7 +200,7 @@ const Auditorias = () => {
                       )}
 
                       {/* ELIMINAR SOLO ADMIN */}
-                      {esAdmin && (
+                      {esAdmin && a.estado === 'CREADA' && (
                         <button style={styles.actionBtnDanger} onClick={() => handleInhabilitar(a.id_auditoria, a.codigo_auditoria)} title="Inhabilitar">
                           <Trash2 size={16} />
                         </button>
@@ -245,8 +264,9 @@ const styles = {
   
   actionBtnPrimary: { background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#0284c7' },
   actionBtnSecondary: { background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#7e22ce' },
-  actionBtnSuccess: { background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#16a34a' },
-  actionBtnDanger: { background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#ef4444' }
+  actionBtnSuccess: { padding: '6px', backgroundColor: '#dcfce7', color: '#16a34a', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' },
+  actionBtnDanger: { padding: '6px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' },
+  actionBtnWarning: { padding: '6px', backgroundColor: '#fef3c7', color: '#d97706', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' },
 };
 
 export default Auditorias;

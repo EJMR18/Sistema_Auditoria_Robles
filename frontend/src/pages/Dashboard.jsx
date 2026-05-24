@@ -1,13 +1,18 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios"; 
-import { CheckCircle2 } from 'lucide-react';
-import { Play } from 'lucide-react';
-import { XCircle } from 'lucide-react';
+import { CheckCircle2, Play, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   // Dejamos el estado vacío para que refleje la base de datos actual
   const [auditorias, setAuditorias] = useState([]);
   const [cargando, setCargando] = useState(true);
+
+  // Usuario activo para validar roles
+  const usuarioData = sessionStorage.getItem('usuario');
+  const usuarioActivo = usuarioData ? JSON.parse(usuarioData) : null;
+  const esAdmin = usuarioActivo?.id_rol === 1;
 
   useEffect(() => {
   const obtenerDatos = async () => {
@@ -47,7 +52,7 @@ const Dashboard = () => {
       <header style={styles.header}>
         <div>
           <h1 style={styles.titulo}>Panel de Control Operativo</h1>
-          <p style={styles.subtitulo}>Resumen de inspecciones en plantas de Robles</p>
+          <p style={styles.subtitulo}>{esAdmin ? 'Resumen general de inspecciones' : 'Resumen de inspecciones asignadas a ti'}</p>
         </div>
       </header>
 
@@ -66,7 +71,9 @@ const Dashboard = () => {
         </div>
 
         <div style={styles.columnaAccion}>
-          <button style={styles.btnNuevo}>+ Nueva Auditoría</button>
+          {esAdmin && (
+            <button style={styles.btnNuevo} onClick={() => navigate('/dashboard/auditorias/crear')}>+ Nueva Auditoría</button>
+          )}
           <div style={{...styles.card, borderTop: '5px solid #e74c3c', width: '100%'}}>
             <XCircle size={32} style={{ color: '#ef4444' }} />
             <h3 style={styles.cardValue}>{abortadas}</h3>
@@ -90,18 +97,22 @@ const Dashboard = () => {
             </thead>
             <tbody>
               {auditorias.length > 0 ? (
-                auditorias.map((a) => (
+                auditorias.slice(0, 5).map((a) => (
                   <tr key={a.id_auditoria} style={styles.filaBody}>
                     <td style={styles.celda}><strong>{a.codigo_auditoria}</strong></td>
                     <td style={styles.celda}>{a.nombre_planta || 'Sin especificar'}</td>
                     <td style={styles.celda}>{new Date(a.creado_en).toLocaleDateString()}</td>
                     <td style={styles.celda}>
-                      <span style={a.estado === 'FINALIZADA' ? styles.tagFin : styles.tagProc}>
+                      <span style={
+                        a.estado === 'FINALIZADA' ? styles.tagFin : 
+                        a.estado === 'ABORTADA' ? styles.tagAbort : 
+                        styles.tagProc
+                      }>
                         {a.estado}
                       </span>
                     </td>
                     <td style={styles.celda}>
-                      <button style={styles.btnVer}>VER</button>
+                      <button style={styles.btnVer} onClick={() => navigate('/dashboard/auditorias')}>Ver Lista</button>
                     </td>
                   </tr>
                 ))
@@ -161,7 +172,7 @@ const styles = {
          borderRadius: '12px'
          },
   btnNuevo: {
-     backgroundColor: '#b89241',
+     backgroundColor: '#10b981',
       color: 'white',
        border: 'none',
         padding: '12px',
@@ -211,19 +222,29 @@ const styles = {
        cursor: 'pointer' 
       },
   tagFin: {
-     backgroundColor: '#d4edda',
-      color: '#155724',
+     backgroundColor: '#dcfce7',
+      color: '#166534',
        padding: '4px 8px',
         borderRadius: '4px', 
-        fontSize: '0.75rem' 
+        fontSize: '0.75rem',
+        fontWeight: 'bold' 
       },
   tagProc: { 
-    backgroundColor: '#fff3cd',
-     color: '#856404',
+    backgroundColor: '#fef3c7',
+     color: '#92400e',
       padding: '4px 8px', 
       borderRadius: '4px',
-       fontSize: '0.75rem'
-       }
+       fontSize: '0.75rem',
+       fontWeight: 'bold'
+       },
+  tagAbort: {
+    backgroundColor: '#fee2e2',
+     color: '#991b1b',
+      padding: '4px 8px', 
+      borderRadius: '4px',
+       fontSize: '0.75rem',
+       fontWeight: 'bold'
+  }
 };
 
 export default Dashboard;

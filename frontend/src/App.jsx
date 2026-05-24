@@ -15,6 +15,8 @@ import FormularioPlantilla from './pages/FormularioPlantilla';
 
 // --- Importaciones Auditorias ---
 import Auditorias from './pages/Auditorias';
+import FormularioAuditoria from './pages/FormularioAuditoria';
+import EjecutarAuditoria from './pages/EjecutarAuditoria';
 
 // --- Importaciones Empleados ---
 import Empleados from './pages/Empleados';
@@ -55,7 +57,11 @@ function App() {
               <Route path=":codigo" element={<DetallePlantilla />} />
             </Route>
 
-            <Route path="auditorias" element={<Auditorias />} />
+            <Route path="auditorias">
+              <Route index element={<Auditorias />} />
+              <Route path="crear" element={<FormularioAuditoria />} />
+              <Route path=":id/ejecutar" element={<EjecutarAuditoria />} />
+            </Route>
             <Route path="usuarios" element={<Usuarios />} />
             
             <Route path="empleados" element={<Empleados />} />

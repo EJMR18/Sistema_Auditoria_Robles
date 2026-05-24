@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { empleadoService } from '../services/empleadoService';
+import { estructuraService } from '../services/estructuraService';
 import { Users, Shield, CheckCircle, Search, Plus } from 'lucide-react';
 
 const Empleados = () => {
   const [empleados, setEmpleados] = useState([]);
+  const [areas, setAreas] = useState([]);
   const [nombreCompleto, setNombreCompleto] = useState('');
   const [cargo, setCargo] = useState('');
+  const [idArea, setIdArea] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [busqueda, setBusqueda] = useState('');
@@ -13,7 +16,17 @@ const Empleados = () => {
 
   useEffect(() => {
     cargarEmpleados();
+    cargarAreas();
   }, []);
+
+  const cargarAreas = async () => {
+    try {
+      const dataAreas = await estructuraService.obtenerAreas();
+      setAreas(dataAreas || []);
+    } catch (err) {
+      console.error('Error al cargar áreas', err);
+    }
+  };
 
   const cargarEmpleados = async () => {
     try {
@@ -28,24 +41,41 @@ const Empleados = () => {
     }
   };
 
-  const handleCrear = async (e) => {
-    e.preventDefault();
-    if (!nombreCompleto.trim()) return setError('El nombre completo es obligatorio');
-    
-    try {
-      setLoading(true);
-      setError('');
-      await empleadoService.crearEmpleado({ nombre_completo: nombreCompleto, cargo });
-      setNombreCompleto('');
-      setCargo('');
-      setMostrarModal(false);
-      cargarEmpleados();
-    } catch (err) {
-      setError(err.response?.data?.mensaje || 'Error al registrar al empleado');
-    } finally {
-      setLoading(false);
-    }
-  };
+ const handleCrear = async (e) => {
+  e.preventDefault();
+
+  if (!nombreCompleto.trim())
+    return setError('El nombre completo es obligatorio');
+
+  if (!idArea)
+    return setError('Debe seleccionar un área de la lista');
+
+  try {
+    setLoading(true);
+    setError('');
+
+    await empleadoService.crearEmpleado({
+      nombre_completo: nombreCompleto.trim(),
+      cargo: cargo.trim(),
+      id_area: Number(idArea)
+    });
+
+    setNombreCompleto('');
+    setCargo('');
+    setIdArea('');
+    setMostrarModal(false);
+
+    cargarEmpleados();
+
+  } catch (err) {
+    setError(
+      err.response?.data?.mensaje ||
+      'Error al registrar al empleado'
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleEliminar = async (id_empleado) => {
     if (!window.confirm('¿Estás seguro de inhabilitar a este empleado? Esta acción es una eliminación virtual.')) return;
@@ -96,44 +126,130 @@ const Empleados = () => {
 
       {error && <div style={{ color: 'red', marginBottom: '15px' }}>{error}</div>}
 
-      {/* MODAL DE CREACIÓN */}
-      {mostrarModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
-            <h3>Registrar Nuevo Empleado</h3>
-            <form onSubmit={handleCrear}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', color: '#0a1f33' }}>Nombre Completo:</label>
-                <input 
-                  type="text" 
-                  value={nombreCompleto} 
-                  onChange={(e) => setNombreCompleto(e.target.value)} 
-                  style={styles.input}
-                  placeholder="Ej. Juan Pérez"
-                />
-              </div>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', color: '#0a1f33' }}>Cargo:</label>
-                <input 
-                  type="text"
-                  value={cargo} 
-                  onChange={(e) => setCargo(e.target.value)} 
-                  style={styles.input}
-                  placeholder="Ej. Operador"
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => setMostrarModal(false)} style={styles.btnCancelar}>
-                  Cancelar
-                </button>
-                <button type="submit" disabled={loading} style={styles.btnGuardar}>
-                  {loading ? 'Guardando...' : 'Registrar'}
-                </button>
-              </div>
-            </form>
-          </div>
+ {/* MODAL DE CREACIÓN */}
+{mostrarModal && (
+  <div style={styles.modalOverlay}>
+    <div style={styles.modalContent}>
+      <h3>Registrar Nuevo Empleado</h3>
+
+      <form onSubmit={handleCrear}>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label
+            style={{
+              display: 'block',
+              marginBottom: '5px',
+              color: '#0a1f33'
+            }}
+          >
+            Nombre Completo:
+          </label>
+
+          <input
+            type="text"
+            value={nombreCompleto}
+            onChange={(e) => setNombreCompleto(e.target.value)}
+            style={styles.input}
+            placeholder="Ej. Juan Pérez"
+          />
         </div>
-      )}
+
+        <div style={{ marginBottom: '15px' }}>
+          <label
+            style={{
+              display: 'block',
+              marginBottom: '5px',
+              color: '#0a1f33'
+            }}
+          >
+            Cargo:
+          </label>
+
+          <input
+            type="text"
+            value={cargo}
+            onChange={(e) => setCargo(e.target.value)}
+            style={styles.input}
+            placeholder="Ej. Operador"
+          />
+        </div>
+
+        {/* CAMPO DE ÁREA ACTUALIZADO A DESPLEGABLE */}
+        <div style={{ marginBottom: '15px' }}>
+          <label
+            style={{
+              display: 'block',
+              marginBottom: '5px',
+              color: '#0a1f33'
+            }}
+          >
+            Área Asignada:
+          </label>
+
+          <select
+            value={idArea}
+            onChange={(e) => setIdArea(e.target.value)}
+            style={styles.input}
+            required
+          >
+            <option value="">-- Seleccione un Área --</option>
+            {areas.map((area) => (
+              <option key={area.id_area} value={area.id_area}>
+                {area.nombre_area}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* CAMPO DE PLANTA DE LECTURA */}
+        <div style={{ marginBottom: '15px' }}>
+          <label
+            style={{
+              display: 'block',
+              marginBottom: '5px',
+              color: '#0a1f33'
+            }}
+          >
+            Planta Correspondiente:
+          </label>
+
+          <input
+            type="text"
+            value={idArea ? (areas.find(a => String(a.id_area) === String(idArea))?.nombre_planta || 'Planta no encontrada') : ''}
+            style={{...styles.input, backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed', fontWeight: 'bold' }}
+            readOnly
+            placeholder="Seleccione un área primero"
+          />
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            gap: '10px',
+            justifyContent: 'flex-end'
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setMostrarModal(false)}
+            style={styles.btnCancelar}
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={styles.btnGuardar}
+          >
+            {loading ? 'Guardando...' : 'Registrar'}
+          </button>
+
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
       {/* BARRA DE BÚSQUEDA Y TABLA */}
       <div style={styles.tablaWrapper}>
